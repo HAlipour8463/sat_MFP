@@ -26,6 +26,7 @@
 //#define SAT_ALL_INIT
 //#define SAT_SMALL_INIT
 //#define SAT_LARGE_INIT
+//#define AVNDCAP
 
 #define DELETED n
 //#define GLOB_UPDT_FREQ 0.6667
@@ -320,8 +321,6 @@ int init()
     i->current = i->first;
 #ifdef SIMPLE_INIT
     i->d = 1;
-#else
-    i->d = 2;
 #endif
   }
 
@@ -514,25 +513,27 @@ source->excess = 0;
       continue;
     }
 
-    if (i->d < DELETED) {
+    if (i != source) {
       if (i->excess > 0) {
-        l = buckets + i->d;
-        aAdd(l,i);
+        i->d = 2;
+//        l = buckets + i->d;
+        aAdd(buckets+2,i);
 #ifdef STAT
         aAddCnt++;
 #endif // STAT
       }
       else if (i->excess == 0){
-            l = buckets + i->d;
-            iAdd(l,i);
+            i->d = 2;
+//            l = buckets + i->d;
+            iAdd(buckets+2,i);
 #ifdef STAT
             iAddCnt++;
 #endif // STAT
       }
       else {
         i->d=1;
-        l = buckets + i->d;
-        iAdd(l,i);
+//        l = buckets + i->d;
+        iAdd(buckets+1,i);
 #ifdef STAT
         iAddCnt++;
 #endif // STAT
@@ -2050,31 +2051,6 @@ void augment(node *i, long k)
     if (j == sink) break;
 #else
     if(j->excess<0) break;
-//    else if(j->excess < delta )// Increase the label of the deficit node if it becomes non-deficit
-//    {
-//        l = buckets + j->d;
-//        iDelete(l, j);
-//        ++j->d;
-//        l = buckets + j->d;
-//        if (j->excess>0)
-//            aAdd(l, j);
-//        else
-//            iAdd(l, j);
-//
-//  // activating the following line will apply a fullBFS, else the incremental BFS is applied but the labels of the
-//  // nodes located on the shortest paths from j might not be changed.
-//    eMax = i->d;
-//#ifdef STAT
-//  relabelCnt++;
-//  workSinceUpdate++;
-//      iDeleteCnt++;
-//      if (j->excess>0)
-//            aAddCnt++;
-//      else
-//           iAddCnt++;
-//#endif // STAT
-//    }
-
 #endif // SIMPLE_INIT
 
     k--;
@@ -2197,8 +2173,8 @@ void stageOne ( )
 
 {
 
-  node *i;
-  bucket *l;
+  node *i, *j;
+  bucket *l, *lj;
   long k;
 
 #if defined(INIT_UPDATE)
@@ -2211,7 +2187,14 @@ void stageOne ( )
 
 
   /* main loop */
+
+
+
+#ifndef SIMPLE_INIT
+  while ( aMax >= 0 && ((buckets  + 1)->firstInactive != sentinelNode) ) {
+#else
   while (aMax >= 0) {
+#endif // SIMPLE_INIT
 #ifdef STAT
     nodeScanCnt1++;
 #endif // STAT
@@ -2517,7 +2500,7 @@ forAllNodes(i)
     printf ("StrPushes_all_1, %10llu\n", pushCnt1  - nStrPushCnt);
     printf ("nStrPushes_all_1,%10llu\n", nStrPushCnt);
     printf ("pushes_all_1,    %10llu\n", pushCnt1 );
-    printf ("relabels_all_1,  %10llu\n\n", relabelCnt + relabelCntGap + relabelCntGlbUp);
+    printf ("relabels_all_1,  %10llu\n\n", RelabelsI+ relabelCnt + relabelCntGap + relabelCntGlbUp);
 
     printf("aAddCnt,        %10llu\n", aAddCnt);
     printf("aDeleteCnt,     %10llu\n", aDeleteCnt);
