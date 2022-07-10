@@ -28,11 +28,10 @@
     node;
 */
 
-#define SAT_SMALL_INIT
 
 /* ----------------------------------------------------------------- */
 
-#if (defined(SAT_SMALL_INIT) || defined(SAT_BIG_INIT))
+#if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
 int parse(long *n_ad, long *m_ad, long *mInp_ad, node **nodes_ad,
 	  arc **arcs_ad, cType **cap_ad,
            node **source_ad, node **sink_ad, long *node_min_ad, cType *allCap_ad)
@@ -79,7 +78,7 @@ arc     *arcs=NULL,             /* pointer to the arc structure */
 
 cType   *acap=NULL,             /* array of capasities */
         cap;                    /* capasity of the current arc */
-#if (defined(SAT_SMALL_INIT) || defined(SAT_BIG_INIT))
+#if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
 cType   allCap = 0;             /* internal sum of arc capacities */
 #endif
 
@@ -308,7 +307,7 @@ while (fgets(in_line, MAXLINE, stdin) != NULL )
 		  arc_first[head + 1] ++;
 
 		  /* storing information about the arc */
-#if (defined(SAT_SMALL_INIT) || defined(SAT_BIG_INIT))
+#if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
           allCap += cap;
 #endif
 		  arc_tail[pos_current]        = tail;
@@ -575,7 +574,7 @@ for ( i = node_min; i < node_max; i ++ ) /* scanning all the nodes
 *arcs_ad = arcs;
 *cap_ad = acap;
 
-#if (defined(SAT_SMALL_INIT) || defined(SAT_BIG_INIT))
+#if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
 *allCap_ad = allCap;
 #endif
 
