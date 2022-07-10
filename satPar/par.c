@@ -455,6 +455,7 @@ source->excess = 0;
 
   /*  setup labels and buckets */
   l = buckets + 1;
+
 #ifdef SIMPLE_INIT
   aMax = 0;
   dMax = 0;
@@ -470,50 +471,39 @@ source->excess = 0;
 
   sink->d = 0;
 
-#ifdef SIMPLE_INIT
-
-  forAllNodes(i) {
+forAllNodes(i) {
 #ifdef STAT
-    nodeScanCntI++;
+      nodeScanCntI++;
 #endif // STAT
-    if (i == sink) {
+      if (i == sink) {
       iAdd(buckets,i);
 #ifdef STAT
       iAddCnt++;
 #endif // STAT
       continue;
-    }
+      }
 
-    if (i->d < DELETED) {
-      l = buckets + i->d;
-      if (i->excess > 0) {
-	aAdd(l,i);
+ #ifdef SIMPLE_INIT
+      if (i->d < DELETED) {
+	l = buckets + i->d;
+	if (i->excess > 0) {
+//#ifdef SAT_ALL_INIT
+//    assert(i->excess > 0);
+//#endif // SAT_ALL_INIT
+	  aAdd(l,i);
 #ifdef STAT
-	aAddCnt++;
+	  aAddCnt++;
 #endif // STAT
-      }
-      else {
-	iAdd(l,i);
+	}
+	else {
+	  iAdd(l,i);
 #ifdef STAT
-	iAddCnt++;
+	  iAddCnt++;
 #endif // STAT
+	}
       }
-    }
-  }
 #else
-  forAllNodes(i) {
-#ifdef STAT
-    nodeScanCntI++;
-#endif // STAT
-    if (i == sink) {
-      iAdd(buckets,i);
-#ifdef STAT
-      iAddCnt++;
-#endif // STAT
-      continue;
-    }
-
-    if (i != source) {
+        if (i != source) {
       if (i->excess > 0) {
         i->d = 2;
 //        l = buckets + i->d;
@@ -531,16 +521,16 @@ source->excess = 0;
 #endif // STAT
       }
       else {
-        i->d=1;
-//        l = buckets + i->d;
-        iAdd(buckets+1,i);
+            i->d = 1;
+//          l = buckets + i->d;
+            iAdd(buckets+1,i);
 #ifdef STAT
         iAddCnt++;
 #endif // STAT
       }
     }
-  }
-#endif
+#endif //SIMPLE_INIT
+    }
   return (1);
 } /* end of init */
 
@@ -857,7 +847,7 @@ void globalUpdate ()
 #endif // STAT
 	    }
 //#ifdef SIMPLE_INIT
-#ifndef CHECK_DEFICIT_LABLES // since the labels of deficit nodes do not changed in the stage one, we do not need to check their labels too.
+#ifdef CHECK_DEFICIT_LABLES // since the labels of deficit nodes do not changed in the stage one, we do not need to check their labels.
 	    else {
 	      iDelete(remNodes, j);
 	      j->d = jD;
@@ -2173,8 +2163,8 @@ void stageOne ( )
 
 {
 
-  node *i, *j;
-  bucket *l, *lj;
+  node *i;
+  bucket *l;
   long k;
 
 #if defined(INIT_UPDATE)
@@ -2188,9 +2178,8 @@ void stageOne ( )
 
   /* main loop */
 
-
-
 #ifndef SIMPLE_INIT
+// If there is no active or deficit nodes, the stage one terminates
   while ( aMax >= 0 && ((buckets  + 1)->firstInactive != sentinelNode) ) {
 #else
   while (aMax >= 0) {
