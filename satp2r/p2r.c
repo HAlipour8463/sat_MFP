@@ -12,8 +12,8 @@
 #include "parser.c"         /* parser */
 #include "timer.c"          /* timing routine */
 
-#define CHECK_SOLUTION
-#define LASY_UPDATE
+//#define CHECK_SOLUTION
+//#define LASY_UPDATE
 //#define OLD_UPDATE
 
 #define TIME
@@ -300,7 +300,6 @@ void initBFS()
 
   qInit();
 
-
   /* initialization */
 
   forAllNodes(i) {
@@ -309,9 +308,6 @@ void initBFS()
 #endif // STAT
 #ifdef SIMPLE_INIT
     i->d = DELETED;
-#ifdef STAT
-    relabelCntI++;
-#endif // STAT
 #else
     if (i->excess < 0) // Since the excess of the source is set as 0 within init(), source is not regarded here!
     {
@@ -555,13 +551,11 @@ source->excess = 0;
   /*  setup labels and buckets */
   l = buckets + 1;
 
-#ifdef SIMPLE_INIT
   aMax = 0;
   dMax = 0;
+#ifdef SIMPLE_INIT
   eMax = 0;
 #else
-  aMax = 1;
-  dMax = 1;
   eMax = 1;
 #endif // SIMPLE_INIT
 
@@ -839,20 +833,7 @@ void globalUpdate ()
 	      aAddCnt++;
 #endif // STAT
 	    }
-//#ifdef SIMPLE_INIT
-#ifdef CHECK_DEFICIT_LABLES // since the labels of deficit nodes do not changed in the stage one, we do not need to check their labels too.
-	    else {
-	      iDelete(remNodes, j);
-	      j->d = jD;
-	      iAdd(jL,j);
-#ifdef STAT
-	      iDeleteCnt++;
-	      relabelCntGlbUp++;
-	      iAddCnt++;
-#endif // STAT
-	    }
-#else
-        else if (j->excess  == 0){
+        else {
           //assert(j->excess  == 0);
 	      iDelete(remNodes, j);
 	      j->d = jD;
@@ -863,18 +844,6 @@ void globalUpdate ()
 	      iAddCnt++;
 #endif // STAT
 	    }
-	    else {
-          //assert(j->excess <0);
-	      iDelete(remNodes, j);
-	      j->d = 1;
-	      iAdd(buckets+1,j);
-#ifdef STAT
-	      iDeleteCnt++;
-	      relabelCntGlbUp++;
-	      iAddCnt++;
-#endif // STAT
-	    }
-#endif // CHECK_DEFICIT_LABLES
 	    j->current = j->first;
 	  }
 	}
@@ -2290,13 +2259,7 @@ void stageOne ( )
 
 
   /* main loop */
-
-#ifndef SIMPLE_INIT
-// If there is no active or deficit nodes, the stage one terminates
-  while ( aMax >= 0 && ((buckets  + 1)->firstInactive != sentinelNode) ) {
-#else
   while (aMax >= 0) {
-#endif // SIMPLE_INIT
 #ifdef STAT
     nodeScanCnt1++;
 #endif // STAT
@@ -2380,6 +2343,9 @@ void stageOne ( )
     {
 //        assert(i->excess >0);
         deficitPush(i);
+
+        if ((buckets  + 1)->firstInactive == sentinelNode)
+            break;
 //#ifdef TEST
 //    if (nNode(i)==558)
 //        printf("The excess of nod %d after deficitPush is %d\n", nNode(i), i->excess);
