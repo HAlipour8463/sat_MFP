@@ -456,13 +456,12 @@ source->excess = 0;
   /*  setup labels and buckets */
   l = buckets + 1;
 
-#ifdef SIMPLE_INIT
+
   aMax = 0;
   dMax = 0;
+#ifdef SIMPLE_INIT
   eMax = 0;
 #else
-  aMax = 1;
-  dMax = 1;
   eMax = 1;
 #endif // SIMPLE_INIT
 
@@ -846,20 +845,7 @@ void globalUpdate ()
 	      aAddCnt++;
 #endif // STAT
 	    }
-//#ifdef SIMPLE_INIT
-#ifdef CHECK_DEFICIT_LABLES // since the labels of deficit nodes do not changed in the stage one, we do not need to check their labels.
-	    else {
-	      iDelete(remNodes, j);
-	      j->d = jD;
-	      iAdd(jL,j);
-#ifdef STAT
-	      iDeleteCnt++;
-	      relabelCntGlbUp++;
-	      iAddCnt++;
-#endif // STAT
-	    }
-#else
-        else if (j->excess  == 0){
+        else {
           //assert(j->excess  == 0);
 	      iDelete(remNodes, j);
 	      j->d = jD;
@@ -870,18 +856,6 @@ void globalUpdate ()
 	      iAddCnt++;
 #endif // STAT
 	    }
-	    else {
-          //assert(j->excess <0);
-	      iDelete(remNodes, j);
-	      j->d = 1;
-	      iAdd(buckets+1,j);
-#ifdef STAT
-	      iDeleteCnt++;
-	      relabelCntGlbUp++;
-	      iAddCnt++;
-#endif // STAT
-	    }
-#endif // CHECK_DEFICIT_LABLES
 	    j->current = j->first;
 	  }
 	}
@@ -2068,7 +2042,7 @@ void augment(node *i, long k)
     {
         // activating the following line will apply a fullBFS, else the incremental BFS is applied but the labels of the
         // nodes located on the shortest paths from j might not be changed.
-        eMax = i->d;
+        eMax = 1;
 
         if (j ->excess >0)
         {
@@ -2109,11 +2083,10 @@ void augment(node *i, long k)
     /* a deficit node becomes active or neutral */
     if (j-> excess < delta)
     {
+        eMax = 1;
         if (j ->excess >0)
         {
            lj = buckets + j->d;
-           if (eMax > j->d)
-                eMax = j->d;
            iDelete(lj,j);
            ++ j->d;     // Only deficit nodes can have 0 label
             aAdd(lj+1,j);
@@ -2126,8 +2099,6 @@ void augment(node *i, long k)
         else if (j ->excess ==0)
         {
            lj = buckets + j->d;
-           if (eMax > j->d)
-                eMax = j->d;
            iDelete(lj,j);
            ++ j->d;     // Only deficit nodes can have 0 label
            iAdd(lj+1,j);
@@ -2168,7 +2139,8 @@ void stageOne ( )
   long k;
 
 #if defined(INIT_UPDATE)
-  globalUpdate ();
+//  globalUpdate ();
+    fullBFS();
 #else
   workSinceUpdate = 0;
 #endif
