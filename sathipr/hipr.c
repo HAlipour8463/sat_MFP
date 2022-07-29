@@ -34,7 +34,7 @@ minum cut problem.*/
 //#define TEST
 #define TIME
 
-//#define NODE_CAP
+//#define AVNDCAP
 //#define INIT_UPDATE
 //#define SIMPLE_INIT
 //#define SAT_ALL_INIT
@@ -353,11 +353,11 @@ long ni, na;
     }
 #else
 double avCap;                   /* the average of arc capacities */
-#ifndef NODE_CAP
+#ifndef AVNDCAP
 avCap = (double)(allCap)/(double)(m);
 #else
 avCap = (double)(allCap)/(double)(n); // the average capacity per node
-#endif // NODE_CAP
+#endif // AVNDCAP
 int b;                         /* boolean variable */
 
 

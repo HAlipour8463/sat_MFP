@@ -17,7 +17,7 @@
 # SAT_ALL_INIT	     saturating all initialisation	
 # SAT_SMALL_INIT     saturating small initialisation	
 # SAT_LARGE_INIT     saturating large initialisation	
-# NODE_CAP 	     the average capacity per node	
+# AVNDCAP 	     the average capacity per node	
 
 CCOMP = gcc
 #CCOMP = g++
@@ -37,9 +37,9 @@ ss_hipr: hipr.c parser.c types.h timer.c
 sl_hipr: hipr.c parser.c types.h timer.c
 	$(CCOMP) $(CFLAGS) -DSAT_LARGE_INIT -o sl_hipr hipr.c
 ss2_hipr: hipr.c parser.c types.h timer.c
-	$(CCOMP) $(CFLAGS) -DSAT_SMALL_INIT -DNODE_CAP -o ss2_hipr hipr.c
+	$(CCOMP) $(CFLAGS) -DSAT_SMALL_INIT -DAVNDCAP -o ss2_hipr hipr.c
 sl2_hipr: hipr.c parser.c types.h timer.c
-	$(CCOMP) $(CFLAGS) -DSAT_LARGE_INIT -DNODE_CAP -o sl2_hipr hipr.c
+	$(CCOMP) $(CFLAGS) -DSAT_LARGE_INIT -DAVNDCAP -o sl2_hipr hipr.c
 
 
 sag_hipr: hipr.c parser.c types.h timer.c
@@ -49,9 +49,9 @@ ssg_hipr: hipr.c parser.c types.h timer.c
 slg_hipr: hipr.c parser.c types.h timer.c
 	$(CCOMP) $(CFLAGS) -DSAT_LARGE_INIT -DINIT_UPDATE -o slg_hipr hipr.c
 ss2g_hipr: hipr.c parser.c types.h timer.c
-	$(CCOMP) $(CFLAGS) -DSAT_SMALL_INIT -DNODE_CAP -DINIT_UPDATE -o ss2g_hipr hipr.c
+	$(CCOMP) $(CFLAGS) -DSAT_SMALL_INIT -DAVNDCAP -DINIT_UPDATE -o ss2g_hipr hipr.c
 sl2g_hipr: hipr.c parser.c types.h timer.c
-	$(CCOMP) $(CFLAGS) -DSAT_LARGE_INIT -DNODE_CAP -DINIT_UPDATE -o sl2g_hipr hipr.c
+	$(CCOMP) $(CFLAGS) -DSAT_LARGE_INIT -DAVNDCAP -DINIT_UPDATE -o sl2g_hipr hipr.c
 
 
 
