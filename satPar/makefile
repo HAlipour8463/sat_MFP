@@ -17,6 +17,7 @@
 # SAT_ALL_INIT	     saturating all initialisation	
 # SAT_SMALL_INIT     saturating small initialisation	
 # SAT_LARGE_INIT     saturating large initialisation	
+# AVNDCAP	     average arc cpacity per node
 
 CCOMP = gcc
 #CCOMP = g++
@@ -24,7 +25,7 @@ CFLAGS = -O4 -DNDEBUG -DSTAT -DCHECK_SOLUTION -Wall -lm -DLASY_UPDATE -DNO_REALL
 #CFLAGS = -g -DPRINT_STAT -DCHECK_SOLUTION -Wall -lm -DLASY_UPDATE
 
 
-all: par sa_par ss_par sl_par sag_par ssg_par slg_par
+all: par sa_par ss_par sl_par sag_par ssg_par slg_par ss2_par sl2_par ss2g_par sl2g_par
 
 par: par.c parser.c types.h timer.c
 	$(CCOMP) $(CFLAGS) -DSIMPLE_INIT -o par par.c
@@ -35,6 +36,11 @@ ss_par: par.c parser.c types.h timer.c
 	$(CCOMP) $(CFLAGS) -DSAT_SMALL_INIT -o ss_par par.c
 sl_par: par.c parser.c types.h timer.c
 	$(CCOMP) $(CFLAGS) -DSAT_LARGE_INIT -o sl_par par.c
+ss2_par: par.c parser.c types.h timer.c
+	$(CCOMP) $(CFLAGS) -DSAT_SMALL_INIT -DAVNDCAP -o ss2_par par.c
+sl2_par: par.c parser.c types.h timer.c
+	$(CCOMP) $(CFLAGS) -DSAT_LARGE_INIT -DAVNDCAP -o sl2_par par.c
+
 
 sag_par: par.c parser.c types.h timer.c
 	$(CCOMP) $(CFLAGS) -DSAT_ALL_INIT -DINIT_UPDATE -o sag_par par.c
@@ -42,9 +48,13 @@ ssg_par: par.c parser.c types.h timer.c
 	$(CCOMP) $(CFLAGS) -DSAT_SMALL_INIT -DINIT_UPDATE -o ssg_par par.c
 slg_par: par.c parser.c types.h timer.c
 	$(CCOMP) $(CFLAGS) -DSAT_LARGE_INIT -DINIT_UPDATE -o slg_par par.c
+ss2g_par: par.c parser.c types.h timer.c
+	$(CCOMP) $(CFLAGS) -DSAT_SMALL_INIT -DAVNDCAP -DINIT_UPDATE -o ss2g_par par.c
+sl2g_par: par.c parser.c types.h timer.c
+	$(CCOMP) $(CFLAGS) -DSAT_LARGE_INIT -DAVNDCAP -DINIT_UPDATE -o sl2g_par par.c
 
 
 
 
 clean: 
-	rm -f par sa_par ss_par sl_par sag_par ssg_par slg_par *~
+	rm -f par sa_par ss_par sl_par sag_par ssg_par slg_par ss2_par sl2_par ss2g_par sl2g_par *~

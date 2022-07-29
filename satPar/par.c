@@ -13,7 +13,7 @@
 #include "timer.c"          /* timing routine */
 
 //#define CHECK_SOLUTION
-//#define LASY_UPDATE
+#define LASY_UPDATE
 
 #define TIME
 //#define PROGRESS
@@ -21,12 +21,12 @@
 //#define STAT
 //#define OLD_UPDATE
 
+//#define AVNDCAP
 //#define INIT_UPDATE
 //#define SIMPLE_INIT
 //#define SAT_ALL_INIT
 //#define SAT_SMALL_INIT
 //#define SAT_LARGE_INIT
-//#define AVNDCAP
 
 #define DELETED n
 //#define GLOB_UPDT_FREQ 0.6667
@@ -387,7 +387,11 @@ int init()
     }
 #else
 double avCap;                   /* the average of arc  capacities */
+#ifndef AVNDCAP
 avCap = (double)(allCap)/(double)(m);
+#else
+avCap = (double)(allCap)/(double)(n); // the average capacity per node
+#endif // AVNDCAP
 #ifdef PROGRESS
  printf("allCap: %d \n n: %d \n avCap: %f\n", allCap, n, avCap);
  #endif // PROGRESS
@@ -2461,7 +2465,7 @@ forAllNodes(i)
     printf ("StrPushes_all_1, %10llu\n", pushCnt1  - nStrPushCnt);
     printf ("nStrPushes_all_1,%10llu\n", nStrPushCnt);
     printf ("pushes_all_1,    %10llu\n", pushCnt1 );
-    printf ("relabels_all_1,  %10llu\n\n", RelabelsI+ relabelCnt + relabelCntGap + relabelCntGlbUp);
+    printf ("relabels_all_1,  %10llu\n\n", relabelCntI+ relabelCnt + relabelCntGap + relabelCntGlbUp);
 
     printf("aAddCnt,        %10llu\n", aAddCnt);
     printf("aDeleteCnt,     %10llu\n", aDeleteCnt);
