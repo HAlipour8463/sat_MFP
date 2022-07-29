@@ -34,6 +34,7 @@ minum cut problem.*/
 //#define TEST
 #define TIME
 
+//#define NODE_CAP
 //#define INIT_UPDATE
 //#define SIMPLE_INIT
 //#define SAT_ALL_INIT
@@ -351,9 +352,15 @@ long ni, na;
         }
     }
 #else
-double avCap;                   /* the average of arc  capacities */
+double avCap;                   /* the average of arc capacities */
+#ifndef NODE_CAP
 avCap = (double)(allCap)/(double)(m);
+#else
+avCap = (double)(allCap)/(double)(n); // the average capacity per node
+#endif // NODE_CAP
 int b;                         /* boolean variable */
+
+
 
 forAllNodes(i) {
         if((i != sink)){
@@ -415,15 +422,9 @@ forAllNodes(i) {
 
   /*  setup labels and buckets */
 
-#ifdef SIMPLE_INIT
   aMax = 0;
   aMin = n;
-  dMax = 1;
-#else
-  aMax = 0;
-  aMin = n;
-  dMax = 1;
-#endif // SIMPLE_INIT
+  dMax = 0;
 
   forAllNodes(i) {
 #ifdef STAT
@@ -548,9 +549,6 @@ void globalUpdate ()
   bucket *l, *jL;          /* bucket */
   long curDist, curDistStart = 0, jD;
   long state;
-#ifndef SIMPLE_INIT
-  bucket *deficitNodes = buckets +1; // The bucket of nodes with negative excess
-#endif // SIMPLE_INIT
 
   updateCnt ++;
 
@@ -607,11 +605,13 @@ void globalUpdate ()
 
   /* breadth first search */
 
+#ifdef SIMPLE_INIT
   // add sink to bucket zero
   iAdd(buckets, sink);
 #ifdef STAT
   iAddCnt++;
 #endif // STAT
+#endif // SIMPLE_INIT
 
 #ifdef PROGRESS
     printf("sink is %d\n",nNode(sink));
@@ -1643,7 +1643,7 @@ void stageOne ( )
     forAllNodes(i)
     printf("label  of node %ld is %ld with excess %lld \n", nNode(i), i-> d, i->excess);
 #endif // PROGRESS
-#endif\
+#endif // defined
 
   workSinceUpdate = 0;
 
