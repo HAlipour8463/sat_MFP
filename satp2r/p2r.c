@@ -21,6 +21,7 @@
 //#define TEST
 //#define STAT
 
+//#define AVNDCAP
 //#define INIT_UPDATE
 //#define SIMPLE_INIT
 //#define SAT_ALL_INIT
@@ -485,7 +486,11 @@ int init()
     }
 #else
 double avCap;                   /* the average of arc  capacities */
+#ifndef AVNDCAP
 avCap = (double)(allCap)/(double)(m);
+#else
+avCap = (double)(allCap)/(double)(n); // the average capacity per node
+#endif // AVNDCAP
 int b;                         /* boolean variable */
 
 forAllNodes(i) {
