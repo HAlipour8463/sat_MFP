@@ -7,6 +7,7 @@ Teh repository includes the push-relabel algoritms (sat_hipr, sat_par, satp2r) a
 Hossein Alipour, Mario Andrés Mu\~noz, Kate Smith-Miles (2022) ## On the impact of initialisation strategies on Maximum Flow algorithm performance 
 ```
 
+```
 Code by: Hossein Alipour
          School of Mathematics and Statistics
          The University of Melbourne
@@ -15,3 +16,5 @@ Code by: Hossein Alipour
          Email: h.alipour@unimelb.edu.au
  
  Copyright: Hossein Alipour
+ ```
+
