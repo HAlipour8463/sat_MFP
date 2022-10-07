@@ -1,7 +1,7 @@
 # sat_MFP
 MFP algorithms with different types of initialisations
 
-Teh repository includes the push-relabel algoritms (sat_hipr, sat_par, satp2r) and pseduo flow algorithms (sat_hipf), which are the new veriosn of hipr, par, p2r, and hipf adapted to work with simple and non-simple initialsiations. More details about different types of initialisations can be found in the below papr:
+This repository includes the push-relabel algoritms (sat_hipr, sat_par, satp2r) and pseduo flow algorithms (sat_hipf), which are the new veriosn of hipr, par, p2r, and hipf adapted to work with simple and non-simple initialsiations. More details about different types of initialisations can be found in the below papr:
 
 ```
 Hossein Alipour, Mario Andrés Muñoz, Kate Smith-Miles (2022) ``On the impact of initialisation strategies on Maximum Flow algorithm performance'' 
