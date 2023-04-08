@@ -28,15 +28,16 @@
     node;
 */
 
+//#define SAT_SMALL_INIT
 
 /* ----------------------------------------------------------------- */
-#if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
+//#if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
 int parse( n_ad, m_ad, nodes_ad, arcs_ad, cap_ad,
            source_ad, sink_ad, node_min_ad, allCap_ad )
-#else
-int parse( n_ad, m_ad, nodes_ad, arcs_ad, cap_ad,
-           source_ad, sink_ad, node_min_ad )
-#endif
+//#else
+//int parse( n_ad, m_ad, nodes_ad, arcs_ad, cap_ad,
+//           source_ad, sink_ad, node_min_ad )
+//#endif
 /* all parameters are output */
 long    *n_ad;                 /* address of the number of nodes */
 long    *m_ad;                 /* address of the number of arcs */
@@ -46,9 +47,9 @@ long    **cap_ad;              /* address of the array of capasities */
 node    **source_ad;           /* address of the pointer to the source */
 node    **sink_ad;             /* address of the pointer to the source */
 long    *node_min_ad;          /* address of the minimal node */
-#if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
+//#if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
 long    *allCap_ad;                /* address of the sum of arc capacities */
-#endif
+//#endif
 
 {
 
@@ -83,11 +84,13 @@ arc     *arcs=NULL,             /* pointer to the arc structure */
         *arc_new,
         *arc_tmp;
 
-long    *acap=NULL,             /* array of capacities */
-        cap;                    /* capacity of the current arc */
-#if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
-cType   allCap = 0;             /* internal sum of arc capacities */
-#endif
+long    *acap=NULL;             /* array of capacities */
+//        cap;                    /* capacity of the current arc */
+cType    cap;                    /* capacity of the current arc */
+//#if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
+excessType   allCap = 0;             /* internal sum of arc capacities */
+//ullint  allCap = 0;             /* internal sum of arc capacities */
+//#endif
 
 long    no_lines=0,             /* no of current input line */
         no_plines=0,            /* no of problem-lines */
@@ -152,7 +155,7 @@ static char *err_message[] =
   };
 /* --------------------------------------------------------------- */
 
-#define STDIN
+//#define STDIN
 
 /* The main loop:
         -  reads the line of the input,
@@ -162,7 +165,7 @@ static char *err_message[] =
         -  does service functions
 */
 #ifndef STDIN
-FILE *fp = fopen("allSatTst9.txt", "r"); // get files automatically not from stdin
+FILE *fp = fopen("Dy1CtVS_VSA3_dynamic1.txt", "r"); // get files automatically not from stdin
 
 while (fgets(in_line, MAXLINE, fp) != NULL )
 #else
@@ -298,9 +301,9 @@ while (fgets(in_line, MAXLINE, stdin) != NULL )
 		arc_first[head + 1] ++;
 
                 /* storing information about the arc */
-#ifdef SAT_SMALL_INIT
+//#ifdef SAT_SMALL_INIT
         allCap += cap;
-#endif // SAT_SMALL_INIT
+//#endif // SAT_SMALL_INIT
 		arc_tail[pos_current]        = tail;
 		arc_tail[pos_current+1]      = head;
 		arc_current       -> head    = nodes + head;
@@ -443,9 +446,9 @@ for ( i = node_min; i < node_max; i ++ ) /* scanning all the nodes
 *arcs_ad = arcs;
 *cap_ad = acap;
 
-#if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
+//#if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
 *allCap_ad = allCap;
-#endif
+//#endif
 
 for ( arc_current = arcs, arc_num = 0;
       arc_num < 2*m;
