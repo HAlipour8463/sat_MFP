@@ -48,7 +48,7 @@ node    **source_ad;           /* address of the pointer to the source */
 node    **sink_ad;             /* address of the pointer to the source */
 long    *node_min_ad;          /* address of the minimal node */
 //#if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
-long    *allCap_ad;                /* address of the sum of arc capacities */
+excessType    *allCap_ad;                /* address of the sum of arc capacities */
 //#endif
 
 {
@@ -84,9 +84,10 @@ arc     *arcs=NULL,             /* pointer to the arc structure */
         *arc_new,
         *arc_tmp;
 
-long    *acap=NULL;             /* array of capacities */
+//long    *acap=NULL;             /* array of capacities */
 //        cap;                    /* capacity of the current arc */
-cType    cap;                    /* capacity of the current arc */
+cType   *acap=NULL,             /* array of capasities */
+        cap;                    /* capasity of the current arc */
 //#if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
 excessType   allCap = 0;             /* internal sum of arc capacities */
 //ullint  allCap = 0;             /* internal sum of arc capacities */
@@ -155,7 +156,7 @@ static char *err_message[] =
   };
 /* --------------------------------------------------------------- */
 
-//#define STDIN
+#define STDIN
 
 /* The main loop:
         -  reads the line of the input,
@@ -165,7 +166,7 @@ static char *err_message[] =
         -  does service functions
 */
 #ifndef STDIN
-FILE *fp = fopen("Dy1CtVS_VSA3_dynamic1.txt", "r"); // get files automatically not from stdin
+FILE *fp = fopen("Wash_Cher_n128_m128_c128_1.txt", "r"); // get files automatically not from stdin
 
 while (fgets(in_line, MAXLINE, fp) != NULL )
 #else

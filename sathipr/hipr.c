@@ -27,9 +27,9 @@ minum cut problem.*/
 //#define PROGRESS
 //#define PRINT_FLOW
 // #define PRINT_CUT
-#define CHECK_SOLUTION
+//#define CHECK_SOLUTION
 // #define CUT_ONLY
-#define STAT
+//#define STAT
 //#define PRINT_STAT
 //#define TEST
 #define TIME
@@ -37,7 +37,7 @@ minum cut problem.*/
 //#define AVNDCAP
 //#define INIT_UPDATE
 //#define SIMPLE_INIT
-#define SAT_ALL_INIT
+//#define SAT_ALL_INIT
 //#define SAT_SMALL_INIT
 //#define SAT_LARGE_INIT
 
@@ -2952,6 +2952,14 @@ t3 = timer() - t3;
 	printf("sizeof(int): %d, sizeof(long long int): %d\n", sizeof(int), sizeof(long long int));
 	printf("x8: %llu,   x9: %llu\n", x8, x9);
 	printf("x10: %lu,   x11: %lu,   x12: %lu\n", x10, x11, x12);
+
+	ullint x13=256, x14=66435;
+	printf("x13: %llu,   x14: %llu\n", x13, x14);
+
+	long x15=100000000000;
+	unsigned long x16=100000000000;
+	ullint x17=100000000000;
+	printf("x15: %lu, x16: %lu, x17: %llu\n", x15, x16, x17);
 #else
 
 //-----------------------------------------------------------------
