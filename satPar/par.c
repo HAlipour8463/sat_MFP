@@ -73,7 +73,7 @@ long updateCnt =0;          /* number of updates */
 long    upScanCnt =0,
         gapCnt   = 0,       /* number of gaps */
         gNodeCnt = 0,       /* number of nodes after gap */
-        dNodeCnt = 0;
+        dNodeCnt = 0,
         globUpdtCnt =0;     /*  number of global updates */
 #endif // STAT
 float t, t2, t3;                 /* for saving times */
@@ -3505,6 +3505,13 @@ forAllNodes(i)
 	printf("x8: %llu,   x9: %llu\n", x8, x9);
 	printf("x10: %lu,   x11: %lu,   x12: %lu\n", x10, x11, x12);
 
+	ullint x13=256, x14=66435;
+	printf("x13: %llu,   x14: %llu\n", x13, x14);
+
+	long x15=100000000000;
+	unsigned long x16=100000000000;
+	ullint x17=100000000000;
+	printf("x15: %lu, x16: %lu, x17: %llu\n", x15, x16, x17);
 #else
 
   //-----------------------------------------------------------------
