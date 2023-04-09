@@ -20,6 +20,7 @@
 //#define TEST
 //#define STAT
 //#define OLD_UPDATE
+#define SATCOUNT
 
 //#define AVNDCAP
 //#define INIT_UPDATE
@@ -66,8 +67,6 @@ node   *sink;                /* sink node pointer */
 //node   **stack;            /* for DFS */
 //node   **sBot, **sTop;     /* stack pointers */
 
-excessType  allCap;             /* sum of all arc capacities */
-
 long updateCnt =0;          /* number of updates */
 #ifdef STAT
 long    upScanCnt =0,
@@ -78,6 +77,7 @@ long    upScanCnt =0,
 #endif // STAT
 float t, t2, t3;                 /* for saving times */
 
+ullint  allCap;             /* sum of all arc capacities */
 double avCap;                   /* the average of arc capacities */
 double avNdCap;                 /* the arc capacities per node */
 
@@ -128,7 +128,7 @@ ullint  arcScanCntI  = 0,       /* number of initial arc scans */
         iDeleteCnt  = 0,
         allocDSCnt = 0,
         checkDsCnt = 0;
-
+#ifdef SATCOUNT
 ullint  StrPushL50avCap_c = 0,    /* number of pushes saturating arcs with original capacities less than or equal to 50% of  avCap*/
         StrPushL75avCap_c = 0,    /* number of pushes saturating arcs with original capacities less than or equal to 75% of  avCap*/
         StrPushL95avCap_c = 0,    /* number of pushes saturating arcs with original capacities less than or equal to 95% of  avCap*/
@@ -256,7 +256,7 @@ ullint  StrPushL50avCap_c = 0,    /* number of pushes saturating arcs with origi
         nStrPushG105avNdCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities greater than or equal to 105% of  avNdCap*/
         nStrPushG125avNdCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities greater than or equal to 125% of  avNdCap*/
         nStrPushG150avNdCap_rc = 0;   /* number of pushes not saturating arcs with residual capacities greater than or equal to 150% of  avNdCap*/
-
+#endif // SATCOUNT
 #endif // STAT
 
 /* macros */
@@ -316,7 +316,7 @@ ullint  StrPushL50avCap_c = 0,    /* number of pushes saturating arcs with origi
 
 #ifdef STAT
 /* Count different types of arc saturations  */
-
+#ifdef SATCOUNT
 int satCount(tstCap, tstResCap, tstDelta)
 {
     long satState;
@@ -1044,6 +1044,7 @@ int satCount(tstCap, tstResCap, tstDelta)
 
 //      return(0);
 }
+#endif // SATCOUNT
 #endif // STAT
 
 
@@ -2833,7 +2834,9 @@ void augment(node *i, long k)
 #endif // PROGRESS
 
 #ifdef STAT
+#ifdef SATCOUNT
       satCount(cap[a-arcs], a ->resCap, delta);
+#endif // SATCOUNT
 #endif // STAT
 
     a->resCap -= delta;
@@ -3364,6 +3367,7 @@ forAllNodes(i)
   printf ("relabels,        %10llu\n\n", relabelCnt + relabelCntI + relabelCntGap + relabelCntGlbUp + relabelCnt2);
 #endif // CUTONLY
 
+#ifdef SATCOUNT
   printf ("StrPushL50avCap_c,      %10llu\n", StrPushL50avCap_c);
   printf ("StrPushL75avCap_c,      %10llu\n", StrPushL75avCap_c);
   printf ("StrPushL95avCap_c,      %10llu\n", StrPushL95avCap_c);
@@ -3491,6 +3495,7 @@ forAllNodes(i)
   printf ("nStrPushG105avNdCap_rc, %10llu\n", nStrPushG105avNdCap_rc);
   printf ("nStrPushG125avNdCap_rc, %10llu\n", nStrPushG125avNdCap_rc);
   printf ("nStrPushG150avNdCap_rc, %10llu\n\n", nStrPushG150avNdCap_rc);
+#endif // SATCOUNT
 
   printf("allCap, %10llu\n", allCap);
   printf("avCap, %lf\n", avCap);
@@ -3581,6 +3586,7 @@ forAllNodes(i)
     printf ("%10llu, ", relabelCnt + relabelCntI+ relabelCntGap + relabelCntGlbUp+relabelCnt2);
 #endif // CUTONLY
 
+#ifdef SATCOUNT
   printf ("%10llu, ", StrPushL50avCap_c);
   printf ("%10llu, ", StrPushL75avCap_c);
   printf ("%10llu, ", StrPushL95avCap_c);
@@ -3708,6 +3714,7 @@ forAllNodes(i)
   printf ("%10llu, ", nStrPushG105avNdCap_rc);
   printf ("%10llu, ", nStrPushG125avNdCap_rc);
   printf ("%10llu, ", nStrPushG150avNdCap_rc);
+#endif // SATCOUNT
 
   printf("%10llu, ", allCap);
   printf("%lf, ", avCap);
