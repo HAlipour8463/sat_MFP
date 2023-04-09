@@ -23,7 +23,7 @@
 
 //#define AVNDCAP
 //#define INIT_UPDATE
-#define SIMPLE_INIT
+//#define SIMPLE_INIT
 //#define SAT_ALL_INIT
 //#define SAT_SMALL_INIT
 //#define SAT_LARGE_INIT
@@ -320,7 +320,6 @@ ullint  StrPushL50avCap_c = 0,    /* number of pushes saturating arcs with origi
 int satCount(tstCap, tstResCap, tstDelta)
 {
     long satState;
-    //cType *tstCap, *tstResCap, *tstDelta;
 
     if (tstResCap == tstDelta)
     {
@@ -1046,6 +1045,8 @@ int satCount(tstCap, tstResCap, tstDelta)
 //      return(0);
 }
 #endif // STAT
+
+
 //long i_dist;
 //node *i_next, *i_prev;
 
@@ -1249,7 +1250,6 @@ int init()
         }
     }
 #else
-double avCap;                   /* the average of arc  capacities */
 
 int b;                         /* boolean variable */
 
@@ -3162,8 +3162,8 @@ forAllNodes(i)
                     nNode(i), nNode( a -> head ), cap[nArc(a)] );
 #endif // PROGRESS
 
-avCap = (double)(allCap)/(double)(m); // the average arc capacity
-avNdCap = (double)(allCap)/(double)(n); // the capacity per node
+  avCap = (double)(allCap)/(double)(m); // the average arc capacity
+  avNdCap = (double)(allCap)/(double)(n); // the capacity per node
 
   nonTriv = init();
 #ifdef TIME
@@ -3504,10 +3504,10 @@ avNdCap = (double)(allCap)/(double)(n); // the capacity per node
 	printf("sizeof(int): %d, sizeof(long long int): %d\n", sizeof(int), sizeof(long long int));
 	printf("x8: %llu,   x9: %llu\n", x8, x9);
 	printf("x10: %lu,   x11: %lu,   x12: %lu\n", x10, x11, x12);
+
 #else
 
   //-----------------------------------------------------------------
-
     printf("%.4f,  %d, ", globUpdtFreq, AP_LEN);
     printf ("%10ld, ", upScanCnt);
     printf ("%10.2f, ", ((float) (relabelCnt + upScanCnt)) / ((float) n));
@@ -3705,6 +3705,7 @@ avNdCap = (double)(allCap)/(double)(n); // the capacity per node
   printf("%10llu, ", allCap);
   printf("%lf, ", avCap);
   printf("%lf, ", avNdCap);
+
 #endif // TEST
 //-----------------------------------------------------------------
 #endif // STAT
