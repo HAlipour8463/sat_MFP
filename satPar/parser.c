@@ -34,7 +34,7 @@
 //#if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
 int parse(long *n_ad, long *m_ad, long *mInp_ad, node **nodes_ad,
 	  arc **arcs_ad, cType **cap_ad,
-           node **source_ad, node **sink_ad, long *node_min_ad, cType *allCap_ad)
+           node **source_ad, node **sink_ad, long *node_min_ad, excessType *allCap_ad)
 //#else
 //int parse(long *n_ad, long *m_ad, long *mInp_ad, node **nodes_ad,
 //	  arc **arcs_ad, cType **cap_ad,
@@ -160,7 +160,7 @@ static char *err_message[] =
 //#define STDIN
 
 #ifndef STDIN
-FILE *fp = fopen("Wash_ExpoLine_r32_co32_d16_1.txt", "r"); // get files automatically not from stdin
+FILE *fp = fopen("Dy1CtVS_VSA3_dynamic1.txt", "r"); // get files automatically not from stdin
 
 while (fgets(in_line, MAXLINE, fp) != NULL )
 #else
