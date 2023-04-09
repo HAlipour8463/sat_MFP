@@ -160,7 +160,7 @@ static char *err_message[] =
 //#define STDIN
 
 #ifndef STDIN
-FILE *fp = fopen("Dy1CtVS_VSA3_dynamic1.txt", "r"); // get files automatically not from stdin
+FILE *fp = fopen("Wash_Cher_n128_m128_c128_1.txt", "r"); // get files automatically not from stdin
 
 while (fgets(in_line, MAXLINE, fp) != NULL )
 #else
