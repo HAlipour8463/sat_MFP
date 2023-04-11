@@ -10,8 +10,10 @@
 //#define DISPLAY_FLOW
 //#define STDIN
 //#define TEST
+#define SATCOUNT
+
 //#define Alloc
-#define FIFO_BUCKET
+//#define FIFO_BUCKET
 //#define LOWEST_LABEL
 //#define SIMPLE_INIT
 //#define SAT_ALL_INIT
@@ -41,10 +43,10 @@ typedef struct arc
 {
 	struct node *from;
 	struct node *to;
-	uint flow;
-//	ullint flow;
-	uint capacity;
-//	ullint capacity;
+//	uint flow;
+	ullint flow;
+//	uint capacity;
+	ullint capacity;
 	uint direction;
 } Arc;
 
@@ -79,9 +81,14 @@ static uint numArcs = 0;
 static uint source = 0;
 static uint sink = 0;
 
+ullint  allCap;             /* sum of all arc capacities */
+double avCap;               /* the average of arc capacities */
+double avNdCap;             /* the arc capacities per node */
+
 #if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
 ullint allCap = 0;
 double avCap = 0;
+double avNdCap = 0;
 #endif
 
 #ifdef LOWEST_LABEL
@@ -138,7 +145,879 @@ static ullint rootScanCnt1  =0;       /* number of root scans in the first stage
 static ullint numBreakRelationship =0;/* number of broken relationships */
 static ullint numAddRelationship =0;/* number of added relationships */
 
-#endif
+#ifdef SATCOUNT
+ullint  StrPushL50avCap_c = 0,    /* number of pushes saturating arcs with original capacities less than or equal to 50% of  avCap*/
+        StrPushL75avCap_c = 0,    /* number of pushes saturating arcs with original capacities less than or equal to 75% of  avCap*/
+        StrPushL95avCap_c = 0,    /* number of pushes saturating arcs with original capacities less than or equal to 95% of  avCap*/
+        StrPushL100avCap_c = 0,    /* number of pushes saturating arcs with original capacities less than or equal to avCap*/
+        StrPushL105avCap_c = 0,   /* number of pushes saturating arcs with original capacities less than or equal to 105% of  avCap*/
+        StrPushL125avCap_c = 0,   /* number of pushes saturating arcs with original capacities less than or equal to 125% of  avCap*/
+        StrPushL150avCap_c = 0,   /* number of pushes saturating arcs with original capacities less than or equal to 150% of  avCap*/
+
+        StrPushL50avNdCap_c = 0,    /* number of pushes saturating arcs with original capacities less than or equal to 50% of  avNdCap*/
+        StrPushL75avNdCap_c = 0,    /* number of pushes saturating arcs with original capacities less than or equal to 75% of  avNdCap*/
+        StrPushL95avNdCap_c = 0,    /* number of pushes saturating arcs with original capacities less than or equal to 95% of  avNdCap*/
+        StrPushL100avNdCap_c = 0,    /* number of pushes saturating arcs with original capacities less than or equal to avNdCap*/
+        StrPushL105avNdCap_c = 0,   /* number of pushes saturating arcs with original capacities less than or equal to 105% of  avNdCap*/
+        StrPushL125avNdCap_c = 0,   /* number of pushes saturating arcs with original capacities less than or equal to 125% of  avNdCap*/
+        StrPushL150avNdCap_c = 0,   /* number of pushes saturating arcs with original capacities less than or equal to 150% of  avNdCap*/
+
+        StrPushG50avCap_c = 0,    /* number of pushes saturating arcs with original capacities greater than or equal to 50% of  avCap*/
+        StrPushG75avCap_c = 0,    /* number of pushes saturating arcs with original capacities greater than or equal to 75% of  avCap*/
+        StrPushG95avCap_c = 0,   /* number of pushes saturating arcs with original capacities greater than or equal to 95% of  avCap*/
+        StrPushG100avCap_c = 0,   /* number of pushes saturating arcs with original capacities greater than or equal to avCap*/
+        StrPushG105avCap_c = 0,   /* number of pushes saturating arcs with original capacities greater than or equal to 105% of  avCap*/
+        StrPushG125avCap_c = 0,   /* number of pushes saturating arcs with original capacities greater than or equal to 125% of  avCap*/
+        StrPushG150avCap_c = 0,   /* number of pushes saturating arcs with original capacities greater than or equal to 150% of  avCap*/
+
+        StrPushG50avNdCap_c = 0,    /* number of pushes saturating arcs with original capacities greater than or equal to 50% of  avNdCap*/
+        StrPushG75avNdCap_c = 0,    /* number of pushes saturating arcs with original capacities greater than or equal to 75% of  avNdCap*/
+        StrPushG95avNdCap_c = 0,   /* number of pushes saturating arcs with original capacities greater than or equal to 95% of  avNdCap*/
+        StrPushG100avNdCap_c = 0,   /* number of pushes saturating arcs with original capacities greater than or equal to avNdCap*/
+        StrPushG105avNdCap_c = 0,   /* number of pushes saturating arcs with original capacities greater than or equal to 105% of  avNdCap*/
+        StrPushG125avNdCap_c = 0,   /* number of pushes saturating arcs with original capacities greater than or equal to 125% of  avNdCap*/
+        StrPushG150avNdCap_c = 0,   /* number of pushes saturating arcs with original capacities greater than or equal to 150% of  avNdCap*/
+
+        nStrPushL50avCap_c = 0,    /* number of pushes not saturating arcs with original capacities less than or equal to 50% of  avCap*/
+        nStrPushL75avCap_c = 0,    /* number of pushes not saturating arcs with original capacities less than or equal to 75% of  avCap*/
+        nStrPushL95avCap_c = 0,    /* number of pushes not saturating arcs with original capacities less than or equal to 95% of  avCap*/
+        nStrPushL100avCap_c = 0,    /* number of pushes not saturating arcs with original capacities less than or equal to avCap*/
+        nStrPushL105avCap_c = 0,   /* number of pushes not saturating arcs with original capacities less than or equal to 105% of  avCap*/
+        nStrPushL125avCap_c = 0,   /* number of pushes not saturating arcs with original capacities less than or equal to 125% of  avCap*/
+        nStrPushL150avCap_c = 0,   /* number of pushes not saturating arcs with original capacities less than or equal to 150% of  avCap*/
+
+        nStrPushL50avNdCap_c = 0,    /* number of pushes not saturating arcs with original capacities less than or equal to 50% of  avNdCap*/
+        nStrPushL75avNdCap_c = 0,    /* number of pushes not saturating arcs with original capacities less than or equal to 75% of  avNdCap*/
+        nStrPushL95avNdCap_c = 0,    /* number of pushes not saturating arcs with original capacities less than or equal to 95% of  avNdCap*/
+        nStrPushL100avNdCap_c = 0,    /* number of pushes not saturating arcs with original capacities less than or equal to avNdCap*/
+        nStrPushL105avNdCap_c = 0,   /* number of pushes not saturating arcs with original capacities less than or equal to 105% of  avNdCap*/
+        nStrPushL125avNdCap_c = 0,   /* number of pushes not saturating arcs with original capacities less than or equal to 125% of  avNdCap*/
+        nStrPushL150avNdCap_c = 0,   /* number of pushes not saturating arcs with original capacities less than or equal to 150% of  avNdCap*/
+
+        nStrPushG50avCap_c = 0,    /* number of pushes not saturating arcs with original capacities greater than or equal to 50% of  avCap*/
+        nStrPushG75avCap_c = 0,    /* number of pushes not saturating arcs with original capacities greater than or equal to 75% of  avCap*/
+        nStrPushG95avCap_c = 0,   /* number of pushes not saturating arcs with original capacities greater than or equal to 95% of  avCap*/
+        nStrPushG100avCap_c = 0,   /* number of pushes not saturating arcs with original capacities greater than or equal to avCap*/
+        nStrPushG105avCap_c = 0,   /* number of pushes not saturating arcs with original capacities greater than or equal to 105% of  avCap*/
+        nStrPushG125avCap_c = 0,   /* number of pushes not saturating arcs with original capacities greater than or equal to 125% of  avCap*/
+        nStrPushG150avCap_c = 0,   /* number of pushes not saturating arcs with original capacities greater than or equal to 150% of  avCap*/
+
+        nStrPushG50avNdCap_c = 0,    /* number of pushes not saturating arcs with original capacities greater than or equal to 50% of  avNdCap*/
+        nStrPushG75avNdCap_c = 0,    /* number of pushes not saturating arcs with original capacities greater than or equal to 75% of  avNdCap*/
+        nStrPushG95avNdCap_c = 0,   /* number of pushes not saturating arcs with original capacities greater than or equal to 95% of  avNdCap*/
+        nStrPushG100avNdCap_c = 0,   /* number of pushes not saturating arcs with original capacities greater than or equal to avNdCap*/
+        nStrPushG105avNdCap_c = 0,   /* number of pushes not saturating arcs with original capacities greater than or equal to 105% of  avNdCap*/
+        nStrPushG125avNdCap_c = 0,   /* number of pushes not saturating arcs with original capacities greater than or equal to 125% of  avNdCap*/
+        nStrPushG150avNdCap_c = 0,   /* number of pushes not saturating arcs with original capacities greater than or equal to 150% of  avNdCap*/
+
+        StrPushL50avCap_rc = 0,    /* number of pushes saturating arcs with residual capacities less than or equal to 50% of  avCap*/
+        StrPushL75avCap_rc = 0,    /* number of pushes saturating arcs with residual capacities less than or equal to 75% of  avCap*/
+        StrPushL95avCap_rc = 0,    /* number of pushes saturating arcs with residual capacities less than or equal to 95% of  avCap*/
+        StrPushL100avCap_rc = 0,    /* number of pushes saturating arcs with residual capacities less than or equal to avCap*/
+        StrPushL105avCap_rc = 0,   /* number of pushes saturating arcs with residual capacities less than or equal to 105% of  avCap*/
+        StrPushL125avCap_rc = 0,   /* number of pushes saturating arcs with residual capacities less than or equal to 125% of  avCap*/
+        StrPushL150avCap_rc = 0,   /* number of pushes saturating arcs with residual capacities less than or equal to 150% of  avCap*/
+
+        StrPushL50avNdCap_rc = 0,    /* number of pushes saturating arcs with residual capacities less than or equal to 50% of  avNdCap*/
+        StrPushL75avNdCap_rc = 0,    /* number of pushes saturating arcs with residual capacities less than or equal to 75% of  avNdCap*/
+        StrPushL95avNdCap_rc = 0,    /* number of pushes saturating arcs with residual capacities less than or equal to 95% of  avNdCap*/
+        StrPushL100avNdCap_rc = 0,    /* number of pushes saturating arcs with residual capacities less than or equal to avNdCap*/
+        StrPushL105avNdCap_rc = 0,   /* number of pushes saturating arcs with residual capacities less than or equal to 105% of  avNdCap*/
+        StrPushL125avNdCap_rc = 0,   /* number of pushes saturating arcs with residual capacities less than or equal to 125% of  avNdCap*/
+        StrPushL150avNdCap_rc = 0,   /* number of pushes saturating arcs with residual capacities less than or equal to 150% of  avNdCap*/
+
+        StrPushG50avCap_rc = 0,    /* number of pushes saturating arcs with residual capacities greater than or equal to 50% of  avCap*/
+        StrPushG75avCap_rc = 0,    /* number of pushes saturating arcs with residual capacities greater than or equal to 75% of  avCap*/
+        StrPushG95avCap_rc = 0,   /* number of pushes saturating arcs with residual capacities greater than or equal to 95% of  avCap*/
+        StrPushG100avCap_rc = 0,   /* number of pushes saturating arcs with residual capacities greater than or equal to avCap*/
+        StrPushG105avCap_rc = 0,   /* number of pushes saturating arcs with residual capacities greater than or equal to 105% of  avCap*/
+        StrPushG125avCap_rc = 0,   /* number of pushes saturating arcs with residual capacities greater than or equal to 125% of  avCap*/
+        StrPushG150avCap_rc = 0,   /* number of pushes saturating arcs with residual capacities greater than or equal to 150% of  avCap*/
+
+        StrPushG50avNdCap_rc = 0,    /* number of pushes saturating arcs with residual capacities greater than or equal to 50% of  avNdCap*/
+        StrPushG75avNdCap_rc = 0,    /* number of pushes saturating arcs with residual capacities greater than or equal to 75% of  avNdCap*/
+        StrPushG95avNdCap_rc = 0,   /* number of pushes saturating arcs with residual capacities greater than or equal to 95% of  avNdCap*/
+        StrPushG100avNdCap_rc = 0,   /* number of pushes saturating arcs with residual capacities greater than or equal to avNdCap*/
+        StrPushG105avNdCap_rc = 0,   /* number of pushes saturating arcs with residual capacities greater than or equal to 105% of  avNdCap*/
+        StrPushG125avNdCap_rc = 0,   /* number of pushes saturating arcs with residual capacities greater than or equal to 125% of  avNdCap*/
+        StrPushG150avNdCap_rc = 0,   /* number of pushes saturating arcs with residual capacities greater than or equal to 150% of  avNdCap*/
+
+        nStrPushL50avCap_rc = 0,    /* number of pushes not saturating arcs with residual capacities less than or equal to 50% of  avCap*/
+        nStrPushL75avCap_rc = 0,    /* number of pushes not saturating arcs with residual capacities less than or equal to 75% of  avCap*/
+        nStrPushL95avCap_rc = 0,    /* number of pushes not saturating arcs with residual capacities less than or equal to 95% of  avCap*/
+        nStrPushL100avCap_rc = 0,    /* number of pushes not saturating arcs with residual capacities less than or equal to avCap*/
+        nStrPushL105avCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities less than or equal to 105% of  avCap*/
+        nStrPushL125avCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities less than or equal to 125% of  avCap*/
+        nStrPushL150avCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities less than or equal to 150% of  avCap*/
+
+        nStrPushL50avNdCap_rc = 0,    /* number of pushes not saturating arcs with residual capacities less than or equal to 50% of  avNdCap*/
+        nStrPushL75avNdCap_rc = 0,    /* number of pushes not saturating arcs with residual capacities less than or equal to 75% of  avNdCap*/
+        nStrPushL95avNdCap_rc = 0,    /* number of pushes not saturating arcs with residual capacities less than or equal to 95% of  avNdCap*/
+        nStrPushL100avNdCap_rc = 0,    /* number of pushes not saturating arcs with residual capacities less than or equal to avNdCap*/
+        nStrPushL105avNdCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities less than or equal to 105% of  avNdCap*/
+        nStrPushL125avNdCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities less than or equal to 125% of  avNdCap*/
+        nStrPushL150avNdCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities less than or equal to 150% of  avNdCap*/
+
+        nStrPushG50avCap_rc = 0,    /* number of pushes not saturating arcs with residual capacities greater than or equal to 50% of  avCap*/
+        nStrPushG75avCap_rc = 0,    /* number of pushes not saturating arcs with residual capacities greater than or equal to 75% of  avCap*/
+        nStrPushG95avCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities greater than or equal to 95% of  avCap*/
+        nStrPushG100avCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities greater than or equal to 100% of  avCap*/
+        nStrPushG105avCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities greater than or equal to avCap*/
+        nStrPushG125avCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities greater than or equal to 125% of  avCap*/
+        nStrPushG150avCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities greater than or equal to 150% of  avCap*/
+
+        nStrPushG50avNdCap_rc = 0,    /* number of pushes not saturating arcs with residual capacities greater than or equal to 50% of  avNdCap*/
+        nStrPushG75avNdCap_rc = 0,    /* number of pushes not saturating arcs with residual capacities greater than or equal to 75% of  avNdCap*/
+        nStrPushG95avNdCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities greater than or equal to 95% of  avNdCap*/
+        nStrPushG100avNdCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities greater than or equal to avNdCap*/
+        nStrPushG105avNdCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities greater than or equal to 105% of  avNdCap*/
+        nStrPushG125avNdCap_rc = 0,   /* number of pushes not saturating arcs with residual capacities greater than or equal to 125% of  avNdCap*/
+        nStrPushG150avNdCap_rc = 0;   /* number of pushes not saturating arcs with residual capacities greater than or equal to 150% of  avNdCap*/
+#endif // SATCOUNT
+#endif // STATS
+
+#define min(a, b) (((a) < (b)) ? a : b)
+
+#define max(a, b) (((a) > (b)) ? a : b)
+
+#ifdef STATS
+/* Count different types of arc saturations  */
+#ifdef SATCOUNT
+int satCount(ullint tstCap, ullint tstResCap, ullint tstDelta)
+{
+#ifdef PROGRESS
+    printf("\nsatCount is called\n");
+    printf("tstCap: %llu,\n", tstCap);
+    printf("tstResCap: %llu,\n", tstResCap);
+    printf("tstDelta: %llu,\n\n", tstDelta);
+#endif // PROGRESS
+    long satState;
+
+    if (tstResCap == tstDelta)
+    {
+        if (tstResCap == tstCap)
+            satState = 11;
+        else
+            satState = 12;
+    }
+    else
+    {
+        if (tstResCap == tstCap)
+            satState = 21;
+        else
+            satState = 22;
+    }
+
+    switch (satState) {
+      case 11:
+	if (tstResCap >= avCap)
+    {
+        if (tstResCap >= 1.5 * avCap)
+        {
+            StrPushG50avCap_c ++;
+            StrPushG75avCap_c ++;
+            StrPushG95avCap_c ++;
+            StrPushG100avCap_c ++;
+            StrPushG105avCap_c ++;
+            StrPushG125avCap_c ++;
+            StrPushG150avCap_c ++;
+        }
+        else if (tstResCap >= 1.25 * avCap)
+        {
+            StrPushG50avCap_c ++;
+            StrPushG75avCap_c ++;
+            StrPushG95avCap_c ++;
+            StrPushG100avCap_c ++;
+            StrPushG105avCap_c ++;
+            StrPushG125avCap_c ++;
+            StrPushL150avCap_c ++;
+        }
+        else if (tstResCap >= 1.05 * avCap)
+        {
+            StrPushG50avCap_c ++;
+            StrPushG75avCap_c ++;
+            StrPushG95avCap_c ++;
+            StrPushG100avCap_c ++;
+            StrPushG105avCap_c ++;
+            StrPushL125avCap_c ++;
+            StrPushL150avCap_c ++;
+        }
+        else
+        {
+            StrPushG50avCap_c ++;
+            StrPushG75avCap_c ++;
+            StrPushG95avCap_c ++;
+            StrPushG100avCap_c ++;
+            StrPushL105avCap_c ++;
+            StrPushL125avCap_c ++;
+            StrPushL150avCap_c ++;
+        }
+    }
+    else
+    {
+        if (tstResCap <= 0.5 * avCap)
+        {
+            StrPushL50avCap_c ++;
+            StrPushL75avCap_c ++;
+            StrPushL95avCap_c ++;
+            StrPushL100avCap_c ++;
+            StrPushL105avCap_c ++;
+            StrPushL125avCap_c ++;
+            StrPushL150avCap_c ++;
+        }
+        else if (tstResCap <= 0.75 * avCap)
+        {
+            StrPushG50avCap_c ++;
+            StrPushL75avCap_c ++;
+            StrPushL95avCap_c ++;
+            StrPushL100avCap_c ++;
+            StrPushL105avCap_c ++;
+            StrPushL125avCap_c ++;
+            StrPushL150avCap_c ++;
+        }
+        else if (tstResCap <= 0.95 * avCap)
+        {
+            StrPushG50avCap_c ++;
+            StrPushG75avCap_c ++;
+            StrPushL95avCap_c ++;
+            StrPushL100avCap_c ++;
+            StrPushL105avCap_c ++;
+            StrPushL125avCap_c ++;
+            StrPushL150avCap_c ++;
+        }
+        else
+        {
+            StrPushG50avCap_c ++;
+            StrPushG75avCap_c ++;
+            StrPushG95avCap_c ++;
+            StrPushL100avCap_c ++;
+            StrPushL105avCap_c ++;
+            StrPushL125avCap_c ++;
+            StrPushL150avCap_c ++;
+        }
+    }
+    //%%%%%%%%%%%%%%%%%%%%%%%
+    if (tstResCap >= avNdCap)
+    {
+        if (tstResCap >= 1.5 * avNdCap)
+        {
+            StrPushG50avNdCap_c ++;
+            StrPushG75avNdCap_c ++;
+            StrPushG95avNdCap_c ++;
+            StrPushG100avNdCap_c ++;
+            StrPushG105avNdCap_c ++;
+            StrPushG125avNdCap_c ++;
+            StrPushG150avNdCap_c ++;
+        }
+        else if (tstResCap >= 1.25 * avNdCap)
+        {
+            StrPushG50avNdCap_c ++;
+            StrPushG75avNdCap_c ++;
+            StrPushG95avNdCap_c ++;
+            StrPushG100avNdCap_c ++;
+            StrPushG105avNdCap_c ++;
+            StrPushG125avNdCap_c ++;
+            StrPushL150avNdCap_c ++;
+        }
+        else if (tstResCap >= 1.05 * avNdCap)
+        {
+            StrPushG50avNdCap_c ++;
+            StrPushG75avNdCap_c ++;
+            StrPushG95avNdCap_c ++;
+            StrPushG100avNdCap_c ++;
+            StrPushG105avNdCap_c ++;
+            StrPushL125avNdCap_c ++;
+            StrPushL150avNdCap_c ++;
+        }
+        else
+        {
+            StrPushG50avNdCap_c ++;
+            StrPushG75avNdCap_c ++;
+            StrPushG95avNdCap_c ++;
+            StrPushG100avNdCap_c ++;
+            StrPushL105avNdCap_c ++;
+            StrPushL125avNdCap_c ++;
+            StrPushL150avNdCap_c ++;
+        }
+    }
+    else
+    {
+        if (tstResCap <= 0.5 * avNdCap)
+        {
+            StrPushL50avNdCap_c ++;
+            StrPushL75avNdCap_c ++;
+            StrPushL95avNdCap_c ++;
+            StrPushL100avNdCap_c ++;
+            StrPushL105avNdCap_c ++;
+            StrPushL125avNdCap_c ++;
+            StrPushL150avNdCap_c ++;
+        }
+        else if (tstResCap <= 0.75 * avNdCap)
+        {
+            StrPushG50avNdCap_c ++;
+            StrPushL75avNdCap_c ++;
+            StrPushL95avNdCap_c ++;
+            StrPushL100avNdCap_c ++;
+            StrPushL105avNdCap_c ++;
+            StrPushL125avNdCap_c ++;
+            StrPushL150avNdCap_c ++;
+        }
+        else if (tstResCap <= 0.95 * avNdCap)
+        {
+            StrPushG50avNdCap_c ++;
+            StrPushG75avNdCap_c ++;
+            StrPushL95avNdCap_c ++;
+            StrPushL100avNdCap_c ++;
+            StrPushL105avNdCap_c ++;
+            StrPushL125avNdCap_c ++;
+            StrPushL150avNdCap_c ++;
+        }
+        else
+        {
+            StrPushG50avNdCap_c ++;
+            StrPushG75avNdCap_c ++;
+            StrPushG95avNdCap_c ++;
+            StrPushL100avNdCap_c ++;
+            StrPushL105avNdCap_c ++;
+            StrPushL125avNdCap_c ++;
+            StrPushL150avNdCap_c ++;
+        }
+    }
+	break;
+      case 12:
+	if (tstResCap >= avCap)
+    {
+        if (tstResCap >= 1.5 * avCap)
+        {
+            StrPushG50avCap_rc ++;
+            StrPushG75avCap_rc ++;
+            StrPushG95avCap_rc ++;
+            StrPushG100avCap_rc ++;
+            StrPushG105avCap_rc ++;
+            StrPushG125avCap_rc ++;
+            StrPushG150avCap_rc ++;
+        }
+        else if (tstResCap >= 1.25 * avCap)
+        {
+            StrPushG50avCap_rc ++;
+            StrPushG75avCap_rc ++;
+            StrPushG95avCap_rc ++;
+            StrPushG100avCap_rc ++;
+            StrPushG105avCap_rc ++;
+            StrPushG125avCap_rc ++;
+            StrPushL150avCap_rc ++;
+        }
+        else if (tstResCap >= 1.05 * avCap)
+        {
+            StrPushG50avCap_rc ++;
+            StrPushG75avCap_rc ++;
+            StrPushG95avCap_rc ++;
+            StrPushG100avCap_rc ++;
+            StrPushG105avCap_rc ++;
+            StrPushL125avCap_rc ++;
+            StrPushL150avCap_rc ++;
+        }
+        else
+        {
+            StrPushG50avCap_rc ++;
+            StrPushG75avCap_rc ++;
+            StrPushG95avCap_rc ++;
+            StrPushG100avCap_rc ++;
+            StrPushL105avCap_rc ++;
+            StrPushL125avCap_rc ++;
+            StrPushL150avCap_rc ++;
+        }
+    }
+    else
+    {
+        if (tstResCap <= 0.5 * avCap)
+        {
+            StrPushL50avCap_rc ++;
+            StrPushL75avCap_rc ++;
+            StrPushL95avCap_rc ++;
+            StrPushL100avCap_rc ++;
+            StrPushL105avCap_rc ++;
+            StrPushL125avCap_rc ++;
+            StrPushL150avCap_rc ++;
+        }
+        else if (tstResCap <= 0.75 * avCap)
+        {
+            StrPushG50avCap_rc ++;
+            StrPushL75avCap_rc ++;
+            StrPushL95avCap_rc ++;
+            StrPushL100avCap_rc ++;
+            StrPushL105avCap_rc ++;
+            StrPushL125avCap_rc ++;
+            StrPushL150avCap_rc ++;
+        }
+        else if (tstResCap <= 0.95 * avCap)
+        {
+            StrPushG50avCap_rc ++;
+            StrPushG75avCap_rc ++;
+            StrPushL95avCap_rc ++;
+            StrPushL100avCap_rc ++;
+            StrPushL105avCap_rc ++;
+            StrPushL125avCap_rc ++;
+            StrPushL150avCap_rc ++;
+        }
+        else
+        {
+            StrPushG50avCap_rc ++;
+            StrPushG75avCap_rc ++;
+            StrPushG95avCap_rc ++;
+            StrPushL100avCap_rc ++;
+            StrPushL105avCap_rc ++;
+            StrPushL125avCap_rc ++;
+            StrPushL150avCap_rc ++;
+        }
+    }
+    //%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if (tstResCap >= avNdCap)
+    {
+        if (tstResCap >= 1.5 * avNdCap)
+        {
+            StrPushG50avNdCap_rc ++;
+            StrPushG75avNdCap_rc ++;
+            StrPushG95avNdCap_rc ++;
+            StrPushG100avNdCap_rc ++;
+            StrPushG105avNdCap_rc ++;
+            StrPushG125avNdCap_rc ++;
+            StrPushG150avNdCap_rc ++;
+        }
+        else if (tstResCap >= 1.25 * avNdCap)
+        {
+            StrPushG50avNdCap_rc ++;
+            StrPushG75avNdCap_rc ++;
+            StrPushG95avNdCap_rc ++;
+            StrPushG100avNdCap_rc ++;
+            StrPushG105avNdCap_rc ++;
+            StrPushG125avNdCap_rc ++;
+            StrPushL150avNdCap_rc ++;
+        }
+        else if (tstResCap >= 1.05 * avNdCap)
+        {
+            StrPushG50avNdCap_rc ++;
+            StrPushG75avNdCap_rc ++;
+            StrPushG95avNdCap_rc ++;
+            StrPushG100avNdCap_rc ++;
+            StrPushG105avNdCap_rc ++;
+            StrPushL125avNdCap_rc ++;
+            StrPushL150avNdCap_rc ++;
+        }
+        else
+        {
+            StrPushG50avNdCap_rc ++;
+            StrPushG75avNdCap_rc ++;
+            StrPushG95avNdCap_rc ++;
+            StrPushG100avNdCap_rc ++;
+            StrPushL105avNdCap_rc ++;
+            StrPushL125avNdCap_rc ++;
+            StrPushL150avNdCap_rc ++;
+        }
+    }
+    else
+    {
+        if (tstResCap <= 0.5 * avNdCap)
+        {
+            StrPushL50avNdCap_rc ++;
+            StrPushL75avNdCap_rc ++;
+            StrPushL95avNdCap_rc ++;
+            StrPushL100avNdCap_rc ++;
+            StrPushL105avNdCap_rc ++;
+            StrPushL125avNdCap_rc ++;
+            StrPushL150avNdCap_rc ++;
+        }
+        else if (tstResCap <= 0.75 * avNdCap)
+        {
+            StrPushG50avNdCap_rc ++;
+            StrPushL75avNdCap_rc ++;
+            StrPushL95avNdCap_rc ++;
+            StrPushL100avNdCap_rc ++;
+            StrPushL105avNdCap_rc ++;
+            StrPushL125avNdCap_rc ++;
+            StrPushL150avNdCap_rc ++;
+        }
+        else if (tstResCap <= 0.95 * avNdCap)
+        {
+            StrPushG50avNdCap_rc ++;
+            StrPushG75avNdCap_rc ++;
+            StrPushL95avNdCap_rc ++;
+            StrPushL100avNdCap_rc ++;
+            StrPushL105avNdCap_rc ++;
+            StrPushL125avNdCap_rc ++;
+            StrPushL150avNdCap_rc ++;
+        }
+        else
+        {
+            StrPushG50avNdCap_rc ++;
+            StrPushG75avNdCap_rc ++;
+            StrPushG95avNdCap_rc ++;
+            StrPushL100avNdCap_rc ++;
+            StrPushL105avNdCap_rc ++;
+            StrPushL125avNdCap_rc ++;
+            StrPushL150avNdCap_rc ++;
+        }
+    }
+	break;
+      case 21:
+	if (tstResCap >= avCap)
+    {
+        if (tstResCap >= 1.5 * avCap)
+        {
+            nStrPushG50avCap_c ++;
+            nStrPushG75avCap_c ++;
+            nStrPushG95avCap_c ++;
+            nStrPushG100avCap_c ++;
+            nStrPushG105avCap_c ++;
+            nStrPushG125avCap_c ++;
+            nStrPushG150avCap_c ++;
+        }
+        else if (tstResCap >= 1.25 * avCap)
+        {
+            nStrPushG50avCap_c ++;
+            nStrPushG75avCap_c ++;
+            nStrPushG95avCap_c ++;
+            nStrPushG100avCap_c ++;
+            nStrPushG105avCap_c ++;
+            nStrPushG125avCap_c ++;
+            nStrPushL150avCap_c ++;
+        }
+        else if (tstResCap >= 1.05 * avCap)
+        {
+            nStrPushG50avCap_c ++;
+            nStrPushG75avCap_c ++;
+            nStrPushG95avCap_c ++;
+            nStrPushG100avCap_c ++;
+            nStrPushG105avCap_c ++;
+            nStrPushL125avCap_c ++;
+            nStrPushL150avCap_c ++;
+        }
+        else
+        {
+            nStrPushG50avCap_c ++;
+            nStrPushG75avCap_c ++;
+            nStrPushG95avCap_c ++;
+            nStrPushG100avCap_c ++;
+            nStrPushL105avCap_c ++;
+            nStrPushL125avCap_c ++;
+            nStrPushL150avCap_c ++;
+        }
+    }
+    else
+    {
+        if (tstResCap <= 0.5 * avCap)
+        {
+            nStrPushL50avCap_c ++;
+            nStrPushL75avCap_c ++;
+            nStrPushL95avCap_c ++;
+            nStrPushL100avCap_c ++;
+            nStrPushL105avCap_c ++;
+            nStrPushL125avCap_c ++;
+            nStrPushL150avCap_c ++;
+        }
+        else if (tstResCap <= 0.75 * avCap)
+        {
+            nStrPushG50avCap_c ++;
+            nStrPushL75avCap_c ++;
+            nStrPushL95avCap_c ++;
+            nStrPushL100avCap_c ++;
+            nStrPushL105avCap_c ++;
+            nStrPushL125avCap_c ++;
+            nStrPushL150avCap_c ++;
+        }
+        else if (tstResCap <= 0.95 * avCap)
+        {
+            nStrPushG50avCap_c ++;
+            nStrPushG75avCap_c ++;
+            nStrPushL95avCap_c ++;
+            nStrPushL100avCap_c ++;
+            nStrPushL105avCap_c ++;
+            nStrPushL125avCap_c ++;
+            nStrPushL150avCap_c ++;
+        }
+        else
+        {
+            nStrPushG50avCap_c ++;
+            nStrPushG75avCap_c ++;
+            nStrPushG95avCap_c ++;
+            nStrPushL100avCap_c ++;
+            nStrPushL105avCap_c ++;
+            nStrPushL125avCap_c ++;
+            nStrPushL150avCap_c ++;
+        }
+    }
+    //%%%%%%%%%%%%%%%%%%%%
+    if (tstResCap >= avNdCap)
+    {
+        if (tstResCap >= 1.5 * avNdCap)
+        {
+            nStrPushG50avNdCap_c ++;
+            nStrPushG75avNdCap_c ++;
+            nStrPushG95avNdCap_c ++;
+            nStrPushG100avNdCap_c ++;
+            nStrPushG105avNdCap_c ++;
+            nStrPushG125avNdCap_c ++;
+            nStrPushG150avNdCap_c ++;
+        }
+        else if (tstResCap >= 1.25 * avNdCap)
+        {
+            nStrPushG50avNdCap_c ++;
+            nStrPushG75avNdCap_c ++;
+            nStrPushG95avNdCap_c ++;
+            nStrPushG100avNdCap_c ++;
+            nStrPushG105avNdCap_c ++;
+            nStrPushG125avNdCap_c ++;
+            nStrPushL150avNdCap_c ++;
+        }
+        else if (tstResCap >= 1.05 * avNdCap)
+        {
+            nStrPushG50avNdCap_c ++;
+            nStrPushG75avNdCap_c ++;
+            nStrPushG95avNdCap_c ++;
+            nStrPushG100avNdCap_c ++;
+            nStrPushG105avNdCap_c ++;
+            nStrPushL125avNdCap_c ++;
+            nStrPushL150avNdCap_c ++;
+        }
+        else
+        {
+            nStrPushG50avNdCap_c ++;
+            nStrPushG75avNdCap_c ++;
+            nStrPushG95avNdCap_c ++;
+            nStrPushG100avNdCap_c ++;
+            nStrPushL105avNdCap_c ++;
+            nStrPushL125avNdCap_c ++;
+            nStrPushL150avNdCap_c ++;
+        }
+    }
+    else
+    {
+        if (tstResCap <= 0.5 * avNdCap)
+        {
+            nStrPushL50avNdCap_c ++;
+            nStrPushL75avNdCap_c ++;
+            nStrPushL95avNdCap_c ++;
+            nStrPushL100avNdCap_c ++;
+            nStrPushL105avNdCap_c ++;
+            nStrPushL125avNdCap_c ++;
+            nStrPushL150avNdCap_c ++;
+        }
+        else if (tstResCap <= 0.75 * avNdCap)
+        {
+            nStrPushG50avNdCap_c ++;
+            nStrPushL75avNdCap_c ++;
+            nStrPushL95avNdCap_c ++;
+            nStrPushL100avNdCap_c ++;
+            nStrPushL105avNdCap_c ++;
+            nStrPushL125avNdCap_c ++;
+            nStrPushL150avNdCap_c ++;
+        }
+        else if (tstResCap <= 0.95 * avNdCap)
+        {
+            nStrPushG50avNdCap_c ++;
+            nStrPushG75avNdCap_c ++;
+            nStrPushL95avNdCap_c ++;
+            nStrPushL100avNdCap_c ++;
+            nStrPushL105avNdCap_c ++;
+            nStrPushL125avNdCap_c ++;
+            nStrPushL150avNdCap_c ++;
+        }
+        else
+        {
+            nStrPushG50avNdCap_c ++;
+            nStrPushG75avNdCap_c ++;
+            nStrPushG95avNdCap_c ++;
+            nStrPushL100avNdCap_c ++;
+            nStrPushL105avNdCap_c ++;
+            nStrPushL125avNdCap_c ++;
+            nStrPushL150avNdCap_c ++;
+        }
+    }
+	break;
+      case 22:
+	if (tstResCap >= avCap)
+    {
+        if (tstResCap >= 1.5 * avCap)
+        {
+            nStrPushG50avCap_rc ++;
+            nStrPushG75avCap_rc ++;
+            nStrPushG95avCap_rc ++;
+            nStrPushG100avCap_rc ++;
+            nStrPushG105avCap_rc ++;
+            nStrPushG125avCap_rc ++;
+            nStrPushG150avCap_rc ++;
+        }
+        else if (tstResCap >= 1.25 * avCap)
+        {
+            nStrPushG50avCap_rc ++;
+            nStrPushG75avCap_rc ++;
+            nStrPushG95avCap_rc ++;
+            nStrPushG100avCap_rc ++;
+            nStrPushG105avCap_rc ++;
+            nStrPushG125avCap_rc ++;
+            nStrPushL150avCap_rc ++;
+        }
+        else if (tstResCap >= 1.05 * avCap)
+        {
+            nStrPushG50avCap_rc ++;
+            nStrPushG75avCap_rc ++;
+            nStrPushG95avCap_rc ++;
+            nStrPushG100avCap_rc ++;
+            nStrPushG105avCap_rc ++;
+            nStrPushL125avCap_rc ++;
+            nStrPushL150avCap_rc ++;
+        }
+        else
+        {
+            nStrPushG50avCap_rc ++;
+            nStrPushG75avCap_rc ++;
+            nStrPushG95avCap_rc ++;
+            nStrPushG100avCap_rc ++;
+            nStrPushL105avCap_rc ++;
+            nStrPushL125avCap_rc ++;
+            nStrPushL150avCap_rc ++;
+        }
+    }
+    else
+    {
+        if (tstResCap <= 0.5 * avCap)
+        {
+            nStrPushL50avCap_rc ++;
+            nStrPushL75avCap_rc ++;
+            nStrPushL95avCap_rc ++;
+            nStrPushL100avCap_rc ++;
+            nStrPushL105avCap_rc ++;
+            nStrPushL125avCap_rc ++;
+            nStrPushL150avCap_rc ++;
+        }
+        else if (tstResCap <= 0.75 * avCap)
+        {
+            nStrPushG50avCap_rc ++;
+            nStrPushL75avCap_rc ++;
+            nStrPushL95avCap_rc ++;
+            nStrPushL100avCap_rc ++;
+            nStrPushL105avCap_rc ++;
+            nStrPushL125avCap_rc ++;
+            nStrPushL150avCap_rc ++;
+        }
+        else if (tstResCap <= 0.95 * avCap)
+        {
+            nStrPushG50avCap_rc ++;
+            nStrPushG75avCap_rc ++;
+            nStrPushL95avCap_rc ++;
+            nStrPushL100avCap_rc ++;
+            nStrPushL105avCap_rc ++;
+            nStrPushL125avCap_rc ++;
+            nStrPushL150avCap_rc ++;
+        }
+        else
+        {
+            nStrPushG50avCap_rc ++;
+            nStrPushG75avCap_rc ++;
+            nStrPushG95avCap_rc ++;
+            nStrPushL100avCap_rc ++;
+            nStrPushL105avCap_rc ++;
+            nStrPushL125avCap_rc ++;
+            nStrPushL150avCap_rc ++;
+        }
+    }
+    //%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if (tstResCap >= avNdCap)
+    {
+        if (tstResCap >= 1.5 * avNdCap)
+        {
+            nStrPushG50avNdCap_rc ++;
+            nStrPushG75avNdCap_rc ++;
+            nStrPushG95avNdCap_rc ++;
+            nStrPushG100avNdCap_rc ++;
+            nStrPushG105avNdCap_rc ++;
+            nStrPushG125avNdCap_rc ++;
+            nStrPushG150avNdCap_rc ++;
+        }
+        else if (tstResCap >= 1.25 * avNdCap)
+        {
+            nStrPushG50avNdCap_rc ++;
+            nStrPushG75avNdCap_rc ++;
+            nStrPushG95avNdCap_rc ++;
+            nStrPushG100avNdCap_rc ++;
+            nStrPushG105avNdCap_rc ++;
+            nStrPushG125avNdCap_rc ++;
+            nStrPushL150avNdCap_rc ++;
+        }
+        else if (tstResCap >= 1.05 * avNdCap)
+        {
+            nStrPushG50avNdCap_rc ++;
+            nStrPushG75avNdCap_rc ++;
+            nStrPushG95avNdCap_rc ++;
+            nStrPushG100avNdCap_rc ++;
+            nStrPushG105avNdCap_rc ++;
+            nStrPushL125avNdCap_rc ++;
+            nStrPushL150avNdCap_rc ++;
+        }
+        else
+        {
+            nStrPushG50avNdCap_rc ++;
+            nStrPushG75avNdCap_rc ++;
+            nStrPushG95avNdCap_rc ++;
+            nStrPushG100avNdCap_rc ++;
+            nStrPushL105avNdCap_rc ++;
+            nStrPushL125avNdCap_rc ++;
+            nStrPushL150avNdCap_rc ++;
+        }
+    }
+    else
+    {
+        if (tstResCap <= 0.5 * avNdCap)
+        {
+            nStrPushL50avNdCap_rc ++;
+            nStrPushL75avNdCap_rc ++;
+            nStrPushL95avNdCap_rc ++;
+            nStrPushL100avNdCap_rc ++;
+            nStrPushL105avNdCap_rc ++;
+            nStrPushL125avNdCap_rc ++;
+            nStrPushL150avNdCap_rc ++;
+        }
+        else if (tstResCap <= 0.75 * avNdCap)
+        {
+            nStrPushG50avNdCap_rc ++;
+            nStrPushL75avNdCap_rc ++;
+            nStrPushL95avNdCap_rc ++;
+            nStrPushL100avNdCap_rc ++;
+            nStrPushL105avNdCap_rc ++;
+            nStrPushL125avNdCap_rc ++;
+            nStrPushL150avNdCap_rc ++;
+        }
+        else if (tstResCap <= 0.95 * avNdCap)
+        {
+            nStrPushG50avNdCap_rc ++;
+            nStrPushG75avNdCap_rc ++;
+            nStrPushL95avNdCap_rc ++;
+            nStrPushL100avNdCap_rc ++;
+            nStrPushL105avNdCap_rc ++;
+            nStrPushL125avNdCap_rc ++;
+            nStrPushL150avNdCap_rc ++;
+        }
+        else
+        {
+            nStrPushG50avNdCap_rc ++;
+            nStrPushG75avNdCap_rc ++;
+            nStrPushG95avNdCap_rc ++;
+            nStrPushL100avNdCap_rc ++;
+            nStrPushL105avNdCap_rc ++;
+            nStrPushL125avNdCap_rc ++;
+            nStrPushL150avNdCap_rc ++;
+        }
+    }
+	break;
+      default:
+	assert(0);
+	break;
+      }
+
+//      return(0);
+}
+#endif // SATCOUNT
+#endif // STATS
 
 #ifdef Alloc
 static void
@@ -392,7 +1271,7 @@ readDimacsFileCreateList (void)
 
 		case 'a':
 
-			sscanf (line, "%c %d %d %d", &ch, &from, &to, &capacity);
+			sscanf (line, "%c %d %d %llu", &ch, &from, &to, &capacity);
 
 			if ((from+to) % 2)
 			{
@@ -418,9 +1297,8 @@ readDimacsFileCreateList (void)
 				-- last;
 			}
 
-#if (defined(SAT_SMALL_INIT) || defined(SAT_LARGE_INIT))
-          allCap += capacity;
-#endif
+            allCap += capacity;
+
 			++ adjacencyList[from-1].numAdjacent;
 			++ adjacencyList[to-1].numAdjacent;
 
@@ -637,7 +1515,7 @@ saturateAllInitialization (void)
 static void
 simpleInitialization (void)
 {
-	uint i, j, size;
+	uint i, size;
 	Arc *tempArc;
 
 #ifdef STATS
@@ -700,7 +1578,7 @@ simpleInitialization (void)
 	for (i=0; i<numNodes; ++i)
     {
         size = adjacencyList[i].numOutOfTree;
-        for (j=0; j< size; ++j)
+        for (int j=0; j< size; ++j)
         {
             printf("adjacencyList[%d]->outOfTree[%d]: from: %d to: %d\n", i+1, j+1, adjacencyList[i].outOfTree[j]->from->number, adjacencyList[i].outOfTree[j]->to->number);
         }
@@ -717,12 +1595,6 @@ satSpecInitialization (void)
 	Arc *tempArc;
 	Node *tempNode;
     int b;                         /* boolean variable */
-
-#ifndef AVNDCAP
-    avCap = (double)(allCap)/(double)(numArcs);
-#else
-    avCap = (double)(allCap)/(double)(numNodes); // the average capacity per node
-#endif // AVNDCAP
 
     //**********************************
     for (i=0; i<numNodes; ++i)
@@ -746,13 +1618,25 @@ satSpecInitialization (void)
 #endif // PROGRESS
 
 #ifdef SAT_SMALL_INIT
+#ifdef AVNDCAP
+        if ((tempArc->to->number != source) && (tempNode->number != sink) &&  ( ((tempArc->capacity>0) && (tempArc->capacity <= 1.05 *avNdCap)) ||
+                (tempNode->number == source) || (tempArc->to->number == sink)) ) b = 1;
+        else b = 0;
+#else
         if ((tempArc->to->number != source) && (tempNode->number != sink) &&  ( ((tempArc->capacity>0) && (tempArc->capacity <= 1.05 *avCap)) ||
                 (tempNode->number == source) || (tempArc->to->number == sink)) ) b = 1;
         else b = 0;
+#endif // AVNDCAP
 #elif defined SAT_LARGE_INIT
+#ifdef AVNDCAP
+        if ((tempArc->to->number != source) && (tempNode->number != sink) &&  ( (tempArc->capacity >= 0.95 *avNdCap) ||
+                (tempNode->number == source) || (tempArc->to->number == sink)) ) b = 1;
+        else b = 0;
+#else
         if ((tempArc->to->number != source) && (tempNode->number != sink) &&  ( (tempArc->capacity >= 0.95 *avCap) ||
                 (tempNode->number == source) || (tempArc->to->number == sink)) ) b = 1;
         else b = 0;
+#endif // AVNDCAP
 #endif // SAT_LARGE_INIT
 
             if (b)
@@ -938,23 +1822,36 @@ pushUpward (Arc *currentArc, Node *child, Node *parent, const ullint resCap)
 	pushCnt1++;
 #endif
 
+#ifdef PROGRESS
+    printf("\nwithin pushUpward we have:\n");
+    printf("currentArc->capacity: %llu,\n", currentArc->capacity);
+    printf("resCap: %llu,\n", resCap);
+    printf("child->excess: %llu\n", child->excess);
+    printf("delta: %llu,\n\n", min(child->excess, resCap));
+#endif // PROGRESS
 	if (resCap >= child->excess)
 	{
 	    if (resCap == child->excess)
         {
 #ifdef STATS
         strPushCnt1++;
+#ifdef SATCOUNT
+      satCount(currentArc->capacity, resCap, min(resCap, child->excess));
+#endif // SATCOUNT
 #endif // STATS
         }
 		else
         {
 #ifdef STATS
             nStrPushCnt1++;
+#ifdef SATCOUNT
+      satCount(currentArc->capacity, resCap, min(resCap, child->excess));
+#endif // SATCOUNT
 #endif // STATS
         }
 
 #ifdef PROGRESS
-        printf("pushUpward from child: %d with label %d and excess %d to parent: %d with label %d and excess %d, pushed flow: %d \n",
+        printf("pushUpward from child: %lu with label %lu and excess %lli to parent: %lu with label %lu and excess %lld, pushed flow: %llu \n",
                child->number, child->label, child->excess, parent->number, parent->label, parent->excess, child->excess);
 #endif // PROGRESS
 
@@ -968,23 +1865,28 @@ pushUpward (Arc *currentArc, Node *child, Node *parent, const ullint resCap)
 		return;
 	}
 #ifdef PROGRESS
-    printf("pushUpward from child: %d with label %d and excess %d to parent: %d with label %d and excess %d, pushed flow: %d \n",
+        printf("pushUpward from child: %lu with label %lu and excess %lli to parent: %lu with label %lu and excess %lld, pushed flow: %llu \n",
            child->number, child->label, child->excess, parent->number, parent->label, parent->excess, resCap);
 #endif // PROGRESS
+
+#ifdef STATS
+	strPushCnt1++;
+#ifdef SATCOUNT
+      satCount(currentArc->capacity, resCap, min(resCap, child->excess));
+#endif // SATCOUNT
+#endif // STATS
 
 	currentArc->direction = 0;
 //	parent->excess += (llint) resCap;
 //	child->excess -= (llint) resCap;
 	parent->excess +=  resCap;
 	child->excess -=  resCap;
-#ifdef STAT
+#ifdef STATS
 	nDeplPush1++;
 #endif // STAT
 	currentArc->flow = currentArc->capacity;
 	parent->outOfTree[parent->numOutOfTree] = currentArc;
-#ifdef STATS
-	strPushCnt1++;
-#endif // STATS
+
 	++ parent->numOutOfTree;
 
 
@@ -1019,17 +1921,29 @@ pushDownward (Arc *currentArc, Node *child, Node *parent, ullint flow)
         {
 #ifdef STATS
             strPushCnt1++;
+#ifdef SATCOUNT
+      /* Since the capacity of the reverse arc is not fixed, we use the
+      capacity of the original arc instead so that the push operation on
+      the reverse arc is considered as the operation on the residual capacity
+      instead of the original capacity in the satCount if the flow does not
+      equal to the original arc capacity*/
+      satCount(currentArc->capacity, flow, min(flow, child->excess));
+#endif // SATCOUNT
 #endif // STATS
         }
 		else
         {
 #ifdef STATS
             nStrPushCnt1++;
+#ifdef SATCOUNT
+      satCount(currentArc->capacity, flow, min(flow, child->excess));
+#endif // SATCOUNT
 #endif // STATS
         }
 
 #ifdef PROGRESS
-        printf("pushDownward from child: %d with label %d and excess %d to parent: %d with label %d and excess %d, pushed flow: %d \n", child->number, child->label, child->excess, parent->number, parent->label, parent->excess, child->excess);
+        printf("pushDownward from child: %lu with label %lu and excess %lli to parent: %lu with label %lu and excess %lld, pushed flow: %llu \n",
+               child->number, child->label, child->excess, parent->number, parent->label, parent->excess, child->excess);
 #endif // PROGRESS
 
 		parent->excess += child->excess;
@@ -1042,18 +1956,24 @@ pushDownward (Arc *currentArc, Node *child, Node *parent, ullint flow)
 		return;
 	}
 #ifdef PROGRESS
-	printf("pushDownward from child: %d with label %d and excess %d to parent: %d with label %d and excess %d, pushed flow: %d  \n", child->number, child->label, child->excess, parent->number, parent->label, parent->excess, flow);
+        printf("pushDownward from child: %lu with label %lu and excess %lli to parent: %lu with label %lu and excess %lld, pushed flow: %llu \n",
+        child->number, child->label, child->excess, parent->number, parent->label, parent->excess, flow);
 #endif // PROGRESS
 
 #ifdef STATS
 	strPushCnt1++;
+#ifdef SATCOUNT
+      satCount(currentArc->capacity, flow, min(flow, child->excess));
+#endif // SATCOUNT
 #endif // STATS
+
 	currentArc->direction = 1;
 //	child->excess -= (llint) flow;
 	child->excess -= flow;
 #ifdef STATS
 	nDeplPush1++;
 #endif // STATS
+
 //	parent->excess += (llint) flow;
 	parent->excess += flow;
 	currentArc->flow = 0;
@@ -1085,7 +2005,7 @@ pushExcess (Node *strongRoot)
 
 	for (current = strongRoot; (current->excess && current->parent); current = parent)
 	{
-#ifdef STAT
+#ifdef STATS
 	    nodeScanCnt1++;
 #endif // STAT
 		parent = current->parent;
@@ -1095,6 +2015,13 @@ pushExcess (Node *strongRoot)
 
 		if (arcToParent->direction)
 		{
+#ifdef PROGRESS
+    printf("\nwithin pushExcess we have:\n");
+    printf("arcToParent->capacity: %llu,\n", arcToParent->capacity);
+    printf("resCap: %llu,\n", arcToParent->capacity - arcToParent->flow);
+    printf("current->excess: %lli\n", current->excess);
+    printf("delta: %llu,\n", min(current->excess, (arcToParent->capacity - arcToParent->flow)));
+#endif // PROGRESS
 			pushUpward (arcToParent, current, parent, (arcToParent->capacity - arcToParent->flow));
 		}
 		else
@@ -1102,6 +2029,144 @@ pushExcess (Node *strongRoot)
 			pushDownward (arcToParent, current, parent, arcToParent->flow);
 		}
 	}
+
+#ifdef PROGRESS
+    printf("after pushing within pushExcess function we have:\n\n");
+
+   	printf ("strPushes1 , %lld\n", strPushCnt1);
+	printf ("nStrPushes1, %lld\n", nStrPushCnt1);
+	printf ("pushes1    , %lld\n\n", pushCnt1);
+
+  #ifdef SATCOUNT
+  printf ("StrPushL50avCap_c,      %10llu\n", StrPushL50avCap_c);
+  printf ("StrPushL75avCap_c,      %10llu\n", StrPushL75avCap_c);
+  printf ("StrPushL95avCap_c,      %10llu\n", StrPushL95avCap_c);
+  printf ("StrPushL100avCap_c,     %10llu\n", StrPushL100avCap_c);
+  printf ("StrPushL105avCap_c,     %10llu\n", StrPushL105avCap_c);
+  printf ("StrPushL125avCap_c,     %10llu\n", StrPushL125avCap_c);
+  printf ("StrPushL150avCap_c,     %10llu\n\n", StrPushL150avCap_c);
+
+  printf ("StrPushG50avCap_c,      %10llu\n", StrPushG50avCap_c);
+  printf ("StrPushG75avCap_c,      %10llu\n", StrPushG75avCap_c);
+  printf ("StrPushG95avCap_c,      %10llu\n", StrPushG95avCap_c);
+  printf ("StrPushG100avCap_c,     %10llu\n", StrPushG100avCap_c);
+  printf ("StrPushG105avCap_c,     %10llu\n", StrPushG105avCap_c);
+  printf ("StrPushG125avCap_c,     %10llu\n", StrPushG125avCap_c);
+  printf ("StrPushG150avCap_c,     %10llu\n\n", StrPushG150avCap_c);
+
+  printf ("StrPushL50avNdCap_c,    %10llu\n", StrPushL50avNdCap_c);
+  printf ("StrPushL75avNdCap_c,    %10llu\n", StrPushL75avNdCap_c);
+  printf ("StrPushL95avNdCap_c,    %10llu\n", StrPushL95avNdCap_c);
+  printf ("StrPushL100avNdCap_c,   %10llu\n", StrPushL100avNdCap_c);
+  printf ("StrPushL105avNdCap_c,   %10llu\n", StrPushL105avNdCap_c);
+  printf ("StrPushL125avNdCap_c,   %10llu\n", StrPushL125avNdCap_c);
+  printf ("StrPushL150avNdCap_c,   %10llu\n\n", StrPushL150avNdCap_c);
+
+  printf ("StrPushG50avNdCap_c,    %10llu\n", StrPushG50avNdCap_c);
+  printf ("StrPushG75avNdCap_c,    %10llu\n", StrPushG75avNdCap_c);
+  printf ("StrPushG95avNdCap_c,    %10llu\n", StrPushG95avNdCap_c);
+  printf ("StrPushG100avNdCap_c,   %10llu\n", StrPushG100avNdCap_c);
+  printf ("StrPushG105avNdCap_c,   %10llu\n", StrPushG105avNdCap_c);
+  printf ("StrPushG125avNdCap_c,   %10llu\n", StrPushG125avNdCap_c);
+  printf ("StrPushG150avNdCap_c,   %10llu\n\n", StrPushG150avNdCap_c);
+
+  printf ("StrPushL50avCap_rc,     %10llu\n", StrPushL50avCap_rc);
+  printf ("StrPushL75avCap_rc,     %10llu\n", StrPushL75avCap_rc);
+  printf ("StrPushL95avCap_rc,     %10llu\n", StrPushL95avCap_rc);
+  printf ("StrPushL100avCap_rc,    %10llu\n", StrPushL100avCap_rc);
+  printf ("StrPushL105avCap_rc,    %10llu\n", StrPushL105avCap_rc);
+  printf ("StrPushL125avCap_rc,    %10llu\n", StrPushL125avCap_rc);
+  printf ("StrPushL150avCap_rc,    %10llu\n\n", StrPushL150avCap_rc);
+
+  printf ("StrPushG50avCap_rc,     %10llu\n", StrPushG50avCap_rc);
+  printf ("StrPushG75avCap_rc,     %10llu\n", StrPushG75avCap_rc);
+  printf ("StrPushG95avCap_rc,     %10llu\n", StrPushG95avCap_rc);
+  printf ("StrPushG100avCap_rc,    %10llu\n", StrPushG100avCap_rc);
+  printf ("StrPushG105avCap_rc,    %10llu\n", StrPushG105avCap_rc);
+  printf ("StrPushG125avCap_rc,    %10llu\n", StrPushG125avCap_rc);
+  printf ("StrPushG150avCap_rc,    %10llu\n\n", StrPushG150avCap_rc);
+
+  printf ("StrPushL50avNdCap_rc,   %10llu\n", StrPushL50avNdCap_rc);
+  printf ("StrPushL75avNdCap_rc,   %10llu\n", StrPushL75avNdCap_rc);
+  printf ("StrPushL95avNdCap_rc,   %10llu\n", StrPushL95avNdCap_rc);
+  printf ("StrPushL100avNdCap_rc,  %10llu\n", StrPushL100avNdCap_rc);
+  printf ("StrPushL105avNdCap_rc,  %10llu\n", StrPushL105avNdCap_rc);
+  printf ("StrPushL125avNdCap_rc,  %10llu\n", StrPushL125avNdCap_rc);
+  printf ("StrPushL150avNdCap_rc,  %10llu\n\n", StrPushL150avNdCap_rc);
+
+  printf ("StrPushG50avNdCap_rc,   %10llu\n", StrPushG50avNdCap_rc);
+  printf ("StrPushG75avNdCap_rc,   %10llu\n", StrPushG75avNdCap_rc);
+  printf ("StrPushG95avNdCap_rc,   %10llu\n", StrPushG95avNdCap_rc);
+  printf ("StrPushG100avNdCap_rc,  %10llu\n", StrPushG100avNdCap_rc);
+  printf ("StrPushG105avNdCap_rc,  %10llu\n", StrPushG105avNdCap_rc);
+  printf ("StrPushG125avNdCap_rc,  %10llu\n", StrPushG125avNdCap_rc);
+  printf ("StrPushG150avNdCap_rc,  %10llu\n\n", StrPushG150avNdCap_rc);
+
+  printf ("nStrPushL50avCap_c,     %10llu\n", nStrPushL50avCap_c);
+  printf ("nStrPushL75avCap_c,     %10llu\n", nStrPushL75avCap_c);
+  printf ("nStrPushL95avCap_c,     %10llu\n", nStrPushL95avCap_c);
+  printf ("nStrPushL100avCap_c,    %10llu\n", nStrPushL100avCap_c);
+  printf ("nStrPushL105avCap_c,    %10llu\n", nStrPushL105avCap_c);
+  printf ("nStrPushL125avCap_c,    %10llu\n", nStrPushL125avCap_c);
+  printf ("nStrPushL150avCap_c,    %10llu\n\n", nStrPushL150avCap_c);
+
+  printf ("nStrPushG50avCap_c,     %10llu\n", nStrPushG50avCap_c);
+  printf ("nStrPushG75avCap_c,     %10llu\n", nStrPushG75avCap_c);
+  printf ("nStrPushG95avCap_c,     %10llu\n", nStrPushG95avCap_c);
+  printf ("nStrPushG100avCap_c,    %10llu\n", nStrPushG100avCap_c);
+  printf ("nStrPushG105avCap_c,    %10llu\n", nStrPushG105avCap_c);
+  printf ("nStrPushG125avCap_c,    %10llu\n", nStrPushG125avCap_c);
+  printf ("nStrPushG150avCap_c,    %10llu\n\n", nStrPushG150avCap_c);
+
+  printf ("nStrPushL50avNdCap_c,   %10llu\n", nStrPushL50avNdCap_c);
+  printf ("nStrPushL75avNdCap_c,   %10llu\n", nStrPushL75avNdCap_c);
+  printf ("nStrPushL95avNdCap_c,   %10llu\n", nStrPushL95avNdCap_c);
+  printf ("nStrPushL100avNdCap_c,  %10llu\n", nStrPushL100avNdCap_c);
+  printf ("nStrPushL105avNdCap_c,  %10llu\n", nStrPushL105avNdCap_c);
+  printf ("nStrPushL125avNdCap_c,  %10llu\n", nStrPushL125avNdCap_c);
+  printf ("nStrPushL150avNdCap_c,  %10llu\n\n", nStrPushL150avNdCap_c);
+
+  printf ("nStrPushG50avNdCap_c,   %10llu\n", nStrPushG50avNdCap_c);
+  printf ("nStrPushG75avNdCap_c,   %10llu\n", nStrPushG75avNdCap_c);
+  printf ("nStrPushG95avNdCap_c,   %10llu\n", nStrPushG95avNdCap_c);
+  printf ("nStrPushG100avNdCap_c,  %10llu\n", nStrPushG100avNdCap_c);
+  printf ("nStrPushG105avNdCap_c,  %10llu\n", nStrPushG105avNdCap_c);
+  printf ("nStrPushG125avNdCap_c,  %10llu\n", nStrPushG125avNdCap_c);
+  printf ("nStrPushG150avNdCap_c,  %10llu\n\n", nStrPushG150avNdCap_c);
+
+  printf ("nStrPushL50avCap_rc,    %10llu\n", nStrPushL50avCap_rc);
+  printf ("nStrPushL75avCap_rc,    %10llu\n", nStrPushL75avCap_rc);
+  printf ("nStrPushL95avCap_rc,    %10llu\n", nStrPushL95avCap_rc);
+  printf ("nStrPushL100avCap_rc,   %10llu\n", nStrPushL100avCap_rc);
+  printf ("nStrPushL105avCap_rc,   %10llu\n", nStrPushL105avCap_rc);
+  printf ("nStrPushL125avCap_rc,   %10llu\n", nStrPushL125avCap_rc);
+  printf ("nStrPushL150avCap_rc,   %10llu\n\n", nStrPushL150avCap_rc);
+
+  printf ("nStrPushG50avCap_rc,    %10llu\n", nStrPushG50avCap_rc);
+  printf ("nStrPushG75avCap_rc,    %10llu\n", nStrPushG75avCap_rc);
+  printf ("nStrPushG95avCap_rc,    %10llu\n", nStrPushG95avCap_rc);
+  printf ("nStrPushG100avCap_rc,   %10llu\n", nStrPushG100avCap_rc);
+  printf ("nStrPushG105avCap_rc,   %10llu\n", nStrPushG105avCap_rc);
+  printf ("nStrPushG125avCap_rc,   %10llu\n", nStrPushG125avCap_rc);
+  printf ("nStrPushG150avCap_rc,   %10llu\n\n", nStrPushG150avCap_rc);
+
+  printf ("nStrPushL50avNdCap_rc,  %10llu\n", nStrPushL50avNdCap_rc);
+  printf ("nStrPushL75avNdCap_rc,  %10llu\n", nStrPushL75avNdCap_rc);
+  printf ("nStrPushL95avNdCap_rc,  %10llu\n", nStrPushL95avNdCap_rc);
+  printf ("nStrPushL100avNdCap_rc, %10llu\n", nStrPushL100avNdCap_rc);
+  printf ("nStrPushL105avNdCap_rc, %10llu\n", nStrPushL105avNdCap_rc);
+  printf ("nStrPushL125avNdCap_rc, %10llu\n", nStrPushL125avNdCap_rc);
+  printf ("nStrPushL150avNdCap_rc, %10llu\n\n", nStrPushL150avNdCap_rc);
+
+  printf ("nStrPushG50avNdCap_rc,  %10llu\n", nStrPushG50avNdCap_rc);
+  printf ("nStrPushG75avNdCap_rc,  %10llu\n", nStrPushG75avNdCap_rc);
+  printf ("nStrPushG95avNdCap_rc,  %10llu\n", nStrPushG95avNdCap_rc);
+  printf ("nStrPushG100avNdCap_rc, %10llu\n", nStrPushG100avNdCap_rc);
+  printf ("nStrPushG105avNdCap_rc, %10llu\n", nStrPushG105avNdCap_rc);
+  printf ("nStrPushG125avNdCap_rc, %10llu\n", nStrPushG125avNdCap_rc);
+  printf ("nStrPushG150avNdCap_rc, %10llu\n\n", nStrPushG150avNdCap_rc);
+#endif // SATCOUNT
+#endif // PROGRESS
 
 	if ((current->excess > 0) && (prevEx <= 0))
 	{
@@ -1214,7 +2279,7 @@ checkChildren (Node *curNode)
 
 	for ( ; (curNode->nextScan); curNode->nextScan = curNode->nextScan->next)
 	{
-#ifdef STAT
+#ifdef STATS
 	    nodeScanCnt1++;
 #endif // STAT
 		if (curNode->nextScan->label == curNode->label)
@@ -1607,7 +2672,7 @@ quickSort (Arc **arr, const uint first, const uint last)
 			swap = NULL;
 			for (j=left; j<i; ++j)
 			{
-#ifdef STAT
+#ifdef STATS
 			    arcScanCnt2++;
 #endif // STAT
 				if (arr[j]->flow < arr[j+1]->flow)
@@ -1670,7 +2735,7 @@ quickSort (Arc **arr, const uint first, const uint last)
 
 	while (left < right)
 	{
-#ifdef STAT
+#ifdef STATS
 	    arcScanCnt2++;
 #endif // STAT
 		if (arr[left]->flow < pivotval)
@@ -1720,7 +2785,7 @@ minisort (Node *current)
 //	for(i=current->nextArc+1; ((i<size) && (tempflow < current->outOfTree[i]->flow)); ++i)
 	for(i=current->nextArc+1; ((i<current->numOutOfTree) && (tempflow < current->outOfTree[i]->flow)); ++i)
 	{
-#ifdef STAT
+#ifdef STATS
 	    arcScanCnt2++;
 #endif // STAT
 		current->outOfTree[i-1] = current->outOfTree[i];
@@ -1738,7 +2803,7 @@ decompose2 (Node *deficitNode, const uint sink, uint *iteration)
 	for ( ;(current->number != sink) && (current->visited < (*iteration));
 				current = tempArc->to)
 	{
-#ifdef STAT
+#ifdef STATS
 	    nodeScanCnt2++;
 #endif // STAT
 		current->visited = (*iteration);
@@ -1778,7 +2843,7 @@ decompose2 (Node *deficitNode, const uint sink, uint *iteration)
 
 			if (current->excess)
             {
-#ifdef STAT
+#ifdef STATS
             nDeplPush2++;
 #endif // STAT
             }
@@ -2243,7 +3308,7 @@ recoverFlow (const uint gap)
 
 for (i=0; i<numNodes; ++i)
 	{
-#ifdef STAT
+#ifdef STATS
 	    nodeScanCnt2++;
 #endif // STAT
 		tempNode = &adjacencyList[i];
@@ -2268,7 +3333,7 @@ for (i=0; i<numNodes; ++i)
                     tempNode->outOfTree[j]->to->number, tempNode->outOfTree[j]->direction);
 #endif // PROGRESS
 
-#ifdef STAT
+#ifdef STATS
 			    arcScanCnt2++;
 #endif // STAT
 				if ((!tempNode->outOfTree[j]->flow) || (tempNode->outOfTree[j]->to == tempNode))
@@ -2295,7 +3360,7 @@ for (i=0; i<numNodes; ++i)
 
 for (i=0; i<numNodes; ++i)
 	{
-#ifdef STAT
+#ifdef STATS
 	    nodeScanCnt2++;
 #endif // STAT
 		tempNode = &adjacencyList[i];
@@ -2372,6 +3437,10 @@ main(int argc, char ** argv)
 #ifdef TIMER
 	readEnd=timer ();
 #endif // TIMER
+
+    avCap = (double)(allCap)/(double)(numArcs);
+    avNdCap = (double)(allCap)/(double)(numNodes); // the capacity per node
+
 
 #ifdef PROGRESS
     uint j, size;
@@ -2629,7 +3698,158 @@ printf("***********************************************\n");
 	printf ("pushes2    , %lld\n", pushCnt2);
     printf ("deplPushes2, %lld\n", deplPush2);
 	printf ("nDeplPushes2, %lld\n",nDeplPush2);
-	printf ("relabel2    , %lld\n", relabelCnt2);
+	printf ("relabel2    , %lld\n\n", relabelCnt2);
+
+#ifdef SATCOUNT
+  printf ("StrPushL50avCap_c,      %10llu\n", StrPushL50avCap_c);
+  printf ("StrPushL75avCap_c,      %10llu\n", StrPushL75avCap_c);
+  printf ("StrPushL95avCap_c,      %10llu\n", StrPushL95avCap_c);
+  printf ("StrPushL100avCap_c,     %10llu\n", StrPushL100avCap_c);
+  printf ("StrPushL105avCap_c,     %10llu\n", StrPushL105avCap_c);
+  printf ("StrPushL125avCap_c,     %10llu\n", StrPushL125avCap_c);
+  printf ("StrPushL150avCap_c,     %10llu\n\n", StrPushL150avCap_c);
+
+  printf ("StrPushG50avCap_c,      %10llu\n", StrPushG50avCap_c);
+  printf ("StrPushG75avCap_c,      %10llu\n", StrPushG75avCap_c);
+  printf ("StrPushG95avCap_c,      %10llu\n", StrPushG95avCap_c);
+  printf ("StrPushG100avCap_c,     %10llu\n", StrPushG100avCap_c);
+  printf ("StrPushG105avCap_c,     %10llu\n", StrPushG105avCap_c);
+  printf ("StrPushG125avCap_c,     %10llu\n", StrPushG125avCap_c);
+  printf ("StrPushG150avCap_c,     %10llu\n\n", StrPushG150avCap_c);
+
+  printf ("StrPushL50avNdCap_c,    %10llu\n", StrPushL50avNdCap_c);
+  printf ("StrPushL75avNdCap_c,    %10llu\n", StrPushL75avNdCap_c);
+  printf ("StrPushL95avNdCap_c,    %10llu\n", StrPushL95avNdCap_c);
+  printf ("StrPushL100avNdCap_c,   %10llu\n", StrPushL100avNdCap_c);
+  printf ("StrPushL105avNdCap_c,   %10llu\n", StrPushL105avNdCap_c);
+  printf ("StrPushL125avNdCap_c,   %10llu\n", StrPushL125avNdCap_c);
+  printf ("StrPushL150avNdCap_c,   %10llu\n\n", StrPushL150avNdCap_c);
+
+  printf ("StrPushG50avNdCap_c,    %10llu\n", StrPushG50avNdCap_c);
+  printf ("StrPushG75avNdCap_c,    %10llu\n", StrPushG75avNdCap_c);
+  printf ("StrPushG95avNdCap_c,    %10llu\n", StrPushG95avNdCap_c);
+  printf ("StrPushG100avNdCap_c,   %10llu\n", StrPushG100avNdCap_c);
+  printf ("StrPushG105avNdCap_c,   %10llu\n", StrPushG105avNdCap_c);
+  printf ("StrPushG125avNdCap_c,   %10llu\n", StrPushG125avNdCap_c);
+  printf ("StrPushG150avNdCap_c,   %10llu\n\n", StrPushG150avNdCap_c);
+
+  printf ("StrPushL50avCap_rc,     %10llu\n", StrPushL50avCap_rc);
+  printf ("StrPushL75avCap_rc,     %10llu\n", StrPushL75avCap_rc);
+  printf ("StrPushL95avCap_rc,     %10llu\n", StrPushL95avCap_rc);
+  printf ("StrPushL100avCap_rc,    %10llu\n", StrPushL100avCap_rc);
+  printf ("StrPushL105avCap_rc,    %10llu\n", StrPushL105avCap_rc);
+  printf ("StrPushL125avCap_rc,    %10llu\n", StrPushL125avCap_rc);
+  printf ("StrPushL150avCap_rc,    %10llu\n\n", StrPushL150avCap_rc);
+
+  printf ("StrPushG50avCap_rc,     %10llu\n", StrPushG50avCap_rc);
+  printf ("StrPushG75avCap_rc,     %10llu\n", StrPushG75avCap_rc);
+  printf ("StrPushG95avCap_rc,     %10llu\n", StrPushG95avCap_rc);
+  printf ("StrPushG100avCap_rc,    %10llu\n", StrPushG100avCap_rc);
+  printf ("StrPushG105avCap_rc,    %10llu\n", StrPushG105avCap_rc);
+  printf ("StrPushG125avCap_rc,    %10llu\n", StrPushG125avCap_rc);
+  printf ("StrPushG150avCap_rc,    %10llu\n\n", StrPushG150avCap_rc);
+
+  printf ("StrPushL50avNdCap_rc,   %10llu\n", StrPushL50avNdCap_rc);
+  printf ("StrPushL75avNdCap_rc,   %10llu\n", StrPushL75avNdCap_rc);
+  printf ("StrPushL95avNdCap_rc,   %10llu\n", StrPushL95avNdCap_rc);
+  printf ("StrPushL100avNdCap_rc,  %10llu\n", StrPushL100avNdCap_rc);
+  printf ("StrPushL105avNdCap_rc,  %10llu\n", StrPushL105avNdCap_rc);
+  printf ("StrPushL125avNdCap_rc,  %10llu\n", StrPushL125avNdCap_rc);
+  printf ("StrPushL150avNdCap_rc,  %10llu\n\n", StrPushL150avNdCap_rc);
+
+  printf ("StrPushG50avNdCap_rc,   %10llu\n", StrPushG50avNdCap_rc);
+  printf ("StrPushG75avNdCap_rc,   %10llu\n", StrPushG75avNdCap_rc);
+  printf ("StrPushG95avNdCap_rc,   %10llu\n", StrPushG95avNdCap_rc);
+  printf ("StrPushG100avNdCap_rc,  %10llu\n", StrPushG100avNdCap_rc);
+  printf ("StrPushG105avNdCap_rc,  %10llu\n", StrPushG105avNdCap_rc);
+  printf ("StrPushG125avNdCap_rc,  %10llu\n", StrPushG125avNdCap_rc);
+  printf ("StrPushG150avNdCap_rc,  %10llu\n\n", StrPushG150avNdCap_rc);
+
+  printf ("nStrPushL50avCap_c,     %10llu\n", nStrPushL50avCap_c);
+  printf ("nStrPushL75avCap_c,     %10llu\n", nStrPushL75avCap_c);
+  printf ("nStrPushL95avCap_c,     %10llu\n", nStrPushL95avCap_c);
+  printf ("nStrPushL100avCap_c,    %10llu\n", nStrPushL100avCap_c);
+  printf ("nStrPushL105avCap_c,    %10llu\n", nStrPushL105avCap_c);
+  printf ("nStrPushL125avCap_c,    %10llu\n", nStrPushL125avCap_c);
+  printf ("nStrPushL150avCap_c,    %10llu\n\n", nStrPushL150avCap_c);
+
+  printf ("nStrPushG50avCap_c,     %10llu\n", nStrPushG50avCap_c);
+  printf ("nStrPushG75avCap_c,     %10llu\n", nStrPushG75avCap_c);
+  printf ("nStrPushG95avCap_c,     %10llu\n", nStrPushG95avCap_c);
+  printf ("nStrPushG100avCap_c,    %10llu\n", nStrPushG100avCap_c);
+  printf ("nStrPushG105avCap_c,    %10llu\n", nStrPushG105avCap_c);
+  printf ("nStrPushG125avCap_c,    %10llu\n", nStrPushG125avCap_c);
+  printf ("nStrPushG150avCap_c,    %10llu\n\n", nStrPushG150avCap_c);
+
+  printf ("nStrPushL50avNdCap_c,   %10llu\n", nStrPushL50avNdCap_c);
+  printf ("nStrPushL75avNdCap_c,   %10llu\n", nStrPushL75avNdCap_c);
+  printf ("nStrPushL95avNdCap_c,   %10llu\n", nStrPushL95avNdCap_c);
+  printf ("nStrPushL100avNdCap_c,  %10llu\n", nStrPushL100avNdCap_c);
+  printf ("nStrPushL105avNdCap_c,  %10llu\n", nStrPushL105avNdCap_c);
+  printf ("nStrPushL125avNdCap_c,  %10llu\n", nStrPushL125avNdCap_c);
+  printf ("nStrPushL150avNdCap_c,  %10llu\n\n", nStrPushL150avNdCap_c);
+
+  printf ("nStrPushG50avNdCap_c,   %10llu\n", nStrPushG50avNdCap_c);
+  printf ("nStrPushG75avNdCap_c,   %10llu\n", nStrPushG75avNdCap_c);
+  printf ("nStrPushG95avNdCap_c,   %10llu\n", nStrPushG95avNdCap_c);
+  printf ("nStrPushG100avNdCap_c,  %10llu\n", nStrPushG100avNdCap_c);
+  printf ("nStrPushG105avNdCap_c,  %10llu\n", nStrPushG105avNdCap_c);
+  printf ("nStrPushG125avNdCap_c,  %10llu\n", nStrPushG125avNdCap_c);
+  printf ("nStrPushG150avNdCap_c,  %10llu\n\n", nStrPushG150avNdCap_c);
+
+  printf ("nStrPushL50avCap_rc,    %10llu\n", nStrPushL50avCap_rc);
+  printf ("nStrPushL75avCap_rc,    %10llu\n", nStrPushL75avCap_rc);
+  printf ("nStrPushL95avCap_rc,    %10llu\n", nStrPushL95avCap_rc);
+  printf ("nStrPushL100avCap_rc,   %10llu\n", nStrPushL100avCap_rc);
+  printf ("nStrPushL105avCap_rc,   %10llu\n", nStrPushL105avCap_rc);
+  printf ("nStrPushL125avCap_rc,   %10llu\n", nStrPushL125avCap_rc);
+  printf ("nStrPushL150avCap_rc,   %10llu\n\n", nStrPushL150avCap_rc);
+
+  printf ("nStrPushG50avCap_rc,    %10llu\n", nStrPushG50avCap_rc);
+  printf ("nStrPushG75avCap_rc,    %10llu\n", nStrPushG75avCap_rc);
+  printf ("nStrPushG95avCap_rc,    %10llu\n", nStrPushG95avCap_rc);
+  printf ("nStrPushG100avCap_rc,   %10llu\n", nStrPushG100avCap_rc);
+  printf ("nStrPushG105avCap_rc,   %10llu\n", nStrPushG105avCap_rc);
+  printf ("nStrPushG125avCap_rc,   %10llu\n", nStrPushG125avCap_rc);
+  printf ("nStrPushG150avCap_rc,   %10llu\n\n", nStrPushG150avCap_rc);
+
+  printf ("nStrPushL50avNdCap_rc,  %10llu\n", nStrPushL50avNdCap_rc);
+  printf ("nStrPushL75avNdCap_rc,  %10llu\n", nStrPushL75avNdCap_rc);
+  printf ("nStrPushL95avNdCap_rc,  %10llu\n", nStrPushL95avNdCap_rc);
+  printf ("nStrPushL100avNdCap_rc, %10llu\n", nStrPushL100avNdCap_rc);
+  printf ("nStrPushL105avNdCap_rc, %10llu\n", nStrPushL105avNdCap_rc);
+  printf ("nStrPushL125avNdCap_rc, %10llu\n", nStrPushL125avNdCap_rc);
+  printf ("nStrPushL150avNdCap_rc, %10llu\n\n", nStrPushL150avNdCap_rc);
+
+  printf ("nStrPushG50avNdCap_rc,  %10llu\n", nStrPushG50avNdCap_rc);
+  printf ("nStrPushG75avNdCap_rc,  %10llu\n", nStrPushG75avNdCap_rc);
+  printf ("nStrPushG95avNdCap_rc,  %10llu\n", nStrPushG95avNdCap_rc);
+  printf ("nStrPushG100avNdCap_rc, %10llu\n", nStrPushG100avNdCap_rc);
+  printf ("nStrPushG105avNdCap_rc, %10llu\n", nStrPushG105avNdCap_rc);
+  printf ("nStrPushG125avNdCap_rc, %10llu\n", nStrPushG125avNdCap_rc);
+  printf ("nStrPushG150avNdCap_rc, %10llu\n\n", nStrPushG150avNdCap_rc);
+#endif // SATCOUNT
+
+  printf("allCap, %10llu\n", allCap);
+  printf("avCap, %lf\n", avCap);
+  printf("avNdCap, %lf\n", avNdCap);
+
+  	int x1 = 3837191168, x2 =  2082712576, x3=1410065408, x4=145800000000, x5=20000000000;
+	long long int  x6 = 145800000000, x7=20000000000;
+	ullint x8 = 229526432000, x9=229526432000000;
+	uint x10 = 229526432000, x11=229526432000000, x12= 5898979798;
+	printf("\n x1: %d, x2: %d, x3: %d, x4: %d, x5: %d, x6: %lld, x7: %lld\n", x1, x2, x3, x4, x5, x6, x7);
+	printf("sizeof(int): %d, sizeof(long long int): %d\n", sizeof(int), sizeof(long long int));
+	printf("x8: %llu,   x9: %llu\n", x8, x9);
+	printf("x10: %lu,   x11: %lu,   x12: %lu\n", x10, x11, x12);
+
+    ullint x13=256, x14=66435;
+	printf("x13: %llu,   x14: %llu\n", x13, x14);
+
+	long x15=100000000000;
+	unsigned long x16=100000000000;
+	ullint x17=100000000000;
+	printf("x15: %lu, x16: %lu, x17: %llu\n\n", x15, x16, x17);
 #endif // STATS
 #else
 
@@ -2671,6 +3891,140 @@ printf("***********************************************\n");
     printf ("%lld, ", deplPush2);
 	printf ("%lld, ",nDeplPush2);
 	printf ("%lld, ", relabelCnt2);
+
+#ifdef SATCOUNT
+  printf ("%10llu, ", StrPushL50avCap_c);
+  printf ("%10llu, ", StrPushL75avCap_c);
+  printf ("%10llu, ", StrPushL95avCap_c);
+  printf ("%10llu, ", StrPushL100avCap_c);
+  printf ("%10llu, ", StrPushL105avCap_c);
+  printf ("%10llu, ", StrPushL125avCap_c);
+  printf ("%10llu, ", StrPushL150avCap_c);
+
+  printf ("%10llu, ", StrPushG50avCap_c);
+  printf ("%10llu, ", StrPushG75avCap_c);
+  printf ("%10llu, ", StrPushG95avCap_c);
+  printf ("%10llu, ", StrPushG100avCap_c);
+  printf ("%10llu, ", StrPushG105avCap_c);
+  printf ("%10llu, ", StrPushG125avCap_c);
+  printf ("%10llu, ", StrPushG150avCap_c);
+
+  printf ("%10llu, ", StrPushL50avNdCap_c);
+  printf ("%10llu, ", StrPushL75avNdCap_c);
+  printf ("%10llu, ", StrPushL95avNdCap_c);
+  printf ("%10llu, ", StrPushL100avNdCap_c);
+  printf ("%10llu, ", StrPushL105avNdCap_c);
+  printf ("%10llu, ", StrPushL125avNdCap_c);
+  printf ("%10llu, ", StrPushL150avNdCap_c);
+
+  printf ("%10llu, ", StrPushG50avNdCap_c);
+  printf ("%10llu, ", StrPushG75avNdCap_c);
+  printf ("%10llu, ", StrPushG95avNdCap_c);
+  printf ("%10llu, ", StrPushG100avNdCap_c);
+  printf ("%10llu, ", StrPushG105avNdCap_c);
+  printf ("%10llu, ", StrPushG125avNdCap_c);
+  printf ("%10llu, ", StrPushG150avNdCap_c);
+
+  printf ("%10llu, ", StrPushL50avCap_rc);
+  printf ("%10llu, ", StrPushL75avCap_rc);
+  printf ("%10llu, ", StrPushL95avCap_rc);
+  printf ("%10llu, ", StrPushL100avCap_rc);
+  printf ("%10llu, ", StrPushL105avCap_rc);
+  printf ("%10llu, ", StrPushL125avCap_rc);
+  printf ("%10llu, ", StrPushL150avCap_rc);
+
+  printf ("%10llu, ", StrPushG50avCap_rc);
+  printf ("%10llu, ", StrPushG75avCap_rc);
+  printf ("%10llu, ", StrPushG95avCap_rc);
+  printf ("%10llu, ", StrPushG100avCap_rc);
+  printf ("%10llu, ", StrPushG105avCap_rc);
+  printf ("%10llu, ", StrPushG125avCap_rc);
+  printf ("%10llu, ", StrPushG150avCap_rc);
+
+  printf ("%10llu, ", StrPushL50avNdCap_rc);
+  printf ("%10llu, ", StrPushL75avNdCap_rc);
+  printf ("%10llu, ", StrPushL95avNdCap_rc);
+  printf ("%10llu, ", StrPushL100avNdCap_rc);
+  printf ("%10llu, ", StrPushL105avNdCap_rc);
+  printf ("%10llu, ", StrPushL125avNdCap_rc);
+  printf ("%10llu, ", StrPushL150avNdCap_rc);
+
+  printf ("%10llu, ", StrPushG50avNdCap_rc);
+  printf ("%10llu, ", StrPushG75avNdCap_rc);
+  printf ("%10llu, ", StrPushG95avNdCap_rc);
+  printf ("%10llu, ", StrPushG100avNdCap_rc);
+  printf ("%10llu, ", StrPushG105avNdCap_rc);
+  printf ("%10llu, ", StrPushG125avNdCap_rc);
+  printf ("%10llu, ", StrPushG150avNdCap_rc);
+
+  printf ("%10llu, ", nStrPushL50avCap_c);
+  printf ("%10llu, ", nStrPushL75avCap_c);
+  printf ("%10llu, ", nStrPushL95avCap_c);
+  printf ("%10llu, ", nStrPushL100avCap_c);
+  printf ("%10llu, ", nStrPushL105avCap_c);
+  printf ("%10llu, ", nStrPushL125avCap_c);
+  printf ("%10llu, ", nStrPushL150avCap_c);
+
+  printf ("%10llu, ", nStrPushG50avCap_c);
+  printf ("%10llu, ", nStrPushG75avCap_c);
+  printf ("%10llu, ", nStrPushG95avCap_c);
+  printf ("%10llu, ", nStrPushG100avCap_c);
+  printf ("%10llu, ", nStrPushG105avCap_c);
+  printf ("%10llu, ", nStrPushG125avCap_c);
+  printf ("%10llu, ", nStrPushG150avCap_c);
+
+  printf ("%10llu, ", nStrPushL50avNdCap_c);
+  printf ("%10llu, ", nStrPushL75avNdCap_c);
+  printf ("%10llu, ", nStrPushL95avNdCap_c);
+  printf ("%10llu, ", nStrPushL100avNdCap_c);
+  printf ("%10llu, ", nStrPushL105avNdCap_c);
+  printf ("%10llu, ", nStrPushL125avNdCap_c);
+  printf ("%10llu, ", nStrPushL150avNdCap_c);
+
+  printf ("%10llu, ", nStrPushG50avNdCap_c);
+  printf ("%10llu, ", nStrPushG75avNdCap_c);
+  printf ("%10llu, ", nStrPushG95avNdCap_c);
+  printf ("%10llu, ", nStrPushG100avNdCap_c);
+  printf ("%10llu, ", nStrPushG105avNdCap_c);
+  printf ("%10llu, ", nStrPushG125avNdCap_c);
+  printf ("%10llu, ", nStrPushG150avNdCap_c);
+
+  printf ("%10llu, ", nStrPushL50avCap_rc);
+  printf ("%10llu, ", nStrPushL75avCap_rc);
+  printf ("%10llu, ", nStrPushL95avCap_rc);
+  printf ("%10llu, ", nStrPushL100avCap_rc);
+  printf ("%10llu, ", nStrPushL105avCap_rc);
+  printf ("%10llu, ", nStrPushL125avCap_rc);
+  printf ("%10llu, ", nStrPushL150avCap_rc);
+
+  printf ("%10llu, ", nStrPushG50avCap_rc);
+  printf ("%10llu, ", nStrPushG75avCap_rc);
+  printf ("%10llu, ", nStrPushG95avCap_rc);
+  printf ("%10llu, ", nStrPushG100avCap_rc);
+  printf ("%10llu, ", nStrPushG105avCap_rc);
+  printf ("%10llu, ", nStrPushG125avCap_rc);
+  printf ("%10llu, ", nStrPushG150avCap_rc);
+
+  printf ("%10llu, ", nStrPushL50avNdCap_rc);
+  printf ("%10llu, ", nStrPushL75avNdCap_rc);
+  printf ("%10llu, ", nStrPushL95avNdCap_rc);
+  printf ("%10llu, ", nStrPushL100avNdCap_rc);
+  printf ("%10llu, ", nStrPushL105avNdCap_rc);
+  printf ("%10llu, ", nStrPushL125avNdCap_rc);
+  printf ("%10llu, ", nStrPushL150avNdCap_rc);
+
+  printf ("%10llu, ", nStrPushG50avNdCap_rc);
+  printf ("%10llu, ", nStrPushG75avNdCap_rc);
+  printf ("%10llu, ", nStrPushG95avNdCap_rc);
+  printf ("%10llu, ", nStrPushG100avNdCap_rc);
+  printf ("%10llu, ", nStrPushG105avNdCap_rc);
+  printf ("%10llu, ", nStrPushG125avNdCap_rc);
+  printf ("%10llu, ", nStrPushG150avNdCap_rc);
+#endif // SATCOUNT
+
+  printf("%10llu, ", allCap);
+  printf("%lf, ", avCap);
+  printf("%lf, ", avNdCap);
 #endif // STAT
 #endif // TEST
 
