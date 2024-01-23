@@ -19,4 +19,4 @@ Code reimplementation by: Hossein Alipour
  
  Copyright: Hossein Alipour
  ```
-
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7154844.svg)](https://doi.org/10.5281/zenodo.7154844)
