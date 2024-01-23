@@ -1,5 +1,5 @@
 # sat_MFP
-MFP algorithms with different types of initialisations
+Max-Flow algorithms with different types of initialisations
 
 This repository includes the push-relabel algorithms (sat_hipr, sat_par, satp2r) and pseudo flow algorithms (sat_hipf), which are the new versions of hipr, par, p2r, and hipf adapted to work with simple and non-simple initialisations. More details about different types of initialisations can be found in the below paper:
 
